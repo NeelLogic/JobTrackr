@@ -15,5 +15,25 @@ JobTrackr is a full-stack job application tracking system built to help students
 - MySQL
 - Git/GitHub
 
-## Status
-Day 1: Project setup and planning
+Current Phase
+
+Phase 1 – Planning & System Design
+
+Completed
+
+* Repository Setup
+* Project Structure
+* Initial Documentation
+
+In Progress
+
+* Requirements Gathering
+* Feature Planning
+* Database Design
+* ERD Creation
+
+Upcoming
+
+* Spring Boot Backend Setup
+* MySQL Integration
+* REST API Development
