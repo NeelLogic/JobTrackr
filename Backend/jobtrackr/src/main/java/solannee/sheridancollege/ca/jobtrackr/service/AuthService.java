@@ -4,6 +4,6 @@ import solannee.sheridancollege.ca.jobtrackr.dto.auth.*; import solannee.sherida
 @Service @RequiredArgsConstructor public class AuthService {
  private final UserRepository users;private final PasswordEncoder encoder;private final AuthenticationManager authenticationManager;private final JwtService jwt;
  @Transactional public AuthResponse register(RegisterRequest req){String email=req.email().trim().toLowerCase();if(users.existsByEmailIgnoreCase(email))throw new ConflictException("An account with this email already exists");User u=new User();u.setName(req.name().trim());u.setEmail(email);u.setPasswordHash(encoder.encode(req.password()));return response(users.save(u));}
- public AuthResponse login(LoginRequest req){authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(req.email().trim().toLowerCase(),req.password()));User u=users.findByEmailIgnoreCase(req.email()).orElseThrow();return response(u);}
+ public AuthResponse login(LoginRequest req){String email=req.email().trim().toLowerCase();authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email,req.password()));User u=users.findByEmailIgnoreCase(email).orElseThrow();return response(u);}
  private AuthResponse response(User u){return new AuthResponse(jwt.generateToken(u.getEmail()),"Bearer",jwt.getExpirationSeconds(),new UserResponse(u.getId(),u.getName(),u.getEmail()));}
 }
