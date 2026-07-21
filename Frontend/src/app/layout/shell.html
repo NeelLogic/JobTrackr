@@ -1,0 +1,42 @@
+<div class="app-shell">
+  <aside class="sidebar" [class.sidebar--open]="menuOpen()">
+    <div class="sidebar__top">
+      <a class="brand brand--light" routerLink="/dashboard" (click)="closeMenu()">Job<span>Trackr</span></a>
+      <button class="icon-button sidebar__close" type="button" aria-label="Close navigation" (click)="closeMenu()">&times;</button>
+    </div>
+
+    <nav aria-label="Primary navigation">
+      <a routerLink="/dashboard" routerLinkActive="active" (click)="closeMenu()">
+        <span class="nav-icon" aria-hidden="true">&#8962;</span> Dashboard
+      </a>
+      <a routerLink="/applications" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">
+        <span class="nav-icon" aria-hidden="true">&#9633;</span> Applications
+      </a>
+      <a routerLink="/applications/new" routerLinkActive="active" (click)="closeMenu()">
+        <span class="nav-icon" aria-hidden="true">+</span> Add application
+      </a>
+    </nav>
+
+    <div class="sidebar__profile">
+      <div class="avatar">{{ user()?.name?.charAt(0)?.toUpperCase() || 'U' }}</div>
+      <div>
+        <strong>{{ user()?.name }}</strong>
+        <span>{{ user()?.email }}</span>
+      </div>
+      <button class="icon-button" type="button" aria-label="Sign out" title="Sign out" (click)="logout()">&#8618;</button>
+    </div>
+  </aside>
+
+  @if (menuOpen()) {
+    <button class="backdrop" aria-label="Close navigation" (click)="closeMenu()"></button>
+  }
+
+  <section class="workspace">
+    <header class="mobile-header">
+      <button class="icon-button" type="button" aria-label="Open navigation" (click)="menuOpen.set(true)">&#9776;</button>
+      <a class="brand" routerLink="/dashboard">Job<span>Trackr</span></a>
+      <span></span>
+    </header>
+    <router-outlet />
+  </section>
+</div>
