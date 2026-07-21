@@ -1,0 +1,3 @@
+package solannee.sheridancollege.ca.jobtrackr.controller;
+import lombok.RequiredArgsConstructor;import org.springframework.security.core.Authentication;import org.springframework.web.bind.annotation.*;import solannee.sheridancollege.ca.jobtrackr.dto.dashboard.DashboardResponse;import solannee.sheridancollege.ca.jobtrackr.service.*;
+@RestController @RequestMapping("/api/dashboard") @RequiredArgsConstructor public class DashboardController{private final JobApplicationService service;private final CurrentUserService current;@GetMapping DashboardResponse get(Authentication a){return service.dashboard(current.require(a));}}

@@ -23,7 +23,7 @@ public class JobApplication {
     @Column(precision = 12, scale = 2) private BigDecimal salaryMin;
     @Column(precision = 12, scale = 2) private BigDecimal salaryMax;
     @Column(length = 3) private String salaryCurrency;
-    @Lob private String notes;
+    @Column(length = 10000) private String notes;
     private LocalDate followUpDate;
     @Column(nullable = false, updatable = false) private Instant createdAt;
     @Column(nullable = false) private Instant updatedAt;
