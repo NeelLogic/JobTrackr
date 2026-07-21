@@ -21,7 +21,7 @@ public record ApplicationRequest(
         String jobUrl,
         @PastOrPresent(message = "must not be in the future") LocalDate applicationDate,
         @NotNull ApplicationStatus status,
-        @NotNull EmploymentType employmentType,
+        EmploymentType employmentType,
         @DecimalMin(value = "0.00", inclusive = true) BigDecimal salaryMin,
         @DecimalMin(value = "0.00", inclusive = true) BigDecimal salaryMax,
         @Pattern(regexp = "^$|[A-Za-z]{3}$", message = "must be a 3-letter currency code")

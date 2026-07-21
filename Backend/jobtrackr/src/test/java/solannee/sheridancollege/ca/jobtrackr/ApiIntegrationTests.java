@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  @Test void userCanCreateSearchUpdateAndDeleteApplication()throws Exception{
   String token=register("crud");JsonNode made=json.readTree(create(token,"Acme"));long id=made.get("id").asLong();
   mvc.perform(get("/api/applications").header("Authorization","Bearer "+token).param("search","acme")).andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1)).andExpect(jsonPath("$.content[0].company").value("Acme"));
-  String update="{\"company\":\"Acme Corp\",\"jobTitle\":\"Developer\",\"status\":\"INTERVIEW\"}";mvc.perform(put("/api/applications/"+id).header("Authorization","Bearer "+token).contentType(MediaType.APPLICATION_JSON).content(update)).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("INTERVIEW"));
+  String update="{\"company\":\"Acme Corp\",\"jobTitle\":\"Developer\",\"applicationDate\":\"2026-07-21\",\"status\":\"INTERVIEW\",\"employmentType\":\"FULL_TIME\"}";mvc.perform(put("/api/applications/"+id).header("Authorization","Bearer "+token).contentType(MediaType.APPLICATION_JSON).content(update)).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("INTERVIEW"));
   mvc.perform(get("/api/dashboard").header("Authorization","Bearer "+token)).andExpect(status().isOk()).andExpect(jsonPath("$.totalApplications").value(1)).andExpect(jsonPath("$.interviews").value(1));
   mvc.perform(delete("/api/applications/"+id).header("Authorization","Bearer "+token)).andExpect(status().isNoContent());
  }
