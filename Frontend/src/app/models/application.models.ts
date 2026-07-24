@@ -1,8 +1,37 @@
-export type ApplicationStatus = 'SAVED' | 'APPLIED' | 'ASSESSMENT' | 'INTERVIEW' | 'OFFER' | 'REJECTED' | 'WITHDRAWN';
-export type EmploymentType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'CO_OP' | 'TEMPORARY' | 'OTHER';
+export const APPLICATION_STATUSES = [
+  'SAVED',
+  'APPLIED',
+  'ASSESSMENT',
+  'INTERVIEW',
+  'OFFER',
+  'REJECTED',
+  'WITHDRAWN',
+] as const;
 
-export const APPLICATION_STATUSES: ApplicationStatus[] = ['SAVED', 'APPLIED', 'ASSESSMENT', 'INTERVIEW', 'OFFER', 'REJECTED', 'WITHDRAWN'];
-export const EMPLOYMENT_TYPES: EmploymentType[] = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'CO_OP', 'TEMPORARY', 'OTHER'];
+export const EMPLOYMENT_TYPES = [
+  'FULL_TIME',
+  'PART_TIME',
+  'CONTRACT',
+  'INTERNSHIP',
+  'CO_OP',
+  'TEMPORARY',
+  'OTHER',
+] as const;
+
+export const APPLICATION_SORT_FIELDS = [
+  'company',
+  'jobTitle',
+  'applicationDate',
+  'status',
+  'createdAt',
+  'updatedAt',
+  'followUpDate',
+] as const;
+
+export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
+export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number];
+export type ApplicationSortField = (typeof APPLICATION_SORT_FIELDS)[number];
+export type SortDirection = 'asc' | 'desc';
 
 export interface JobApplication {
   id: number;
@@ -40,6 +69,6 @@ export interface ApplicationQuery {
   employmentType?: EmploymentType | '';
   page?: number;
   size?: number;
-  sort?: string;
-  direction?: 'asc' | 'desc';
+  sort?: ApplicationSortField;
+  direction?: SortDirection;
 }
