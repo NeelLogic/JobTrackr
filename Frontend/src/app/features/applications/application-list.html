@@ -1,0 +1,206 @@
+<main class="page">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Your pipeline</p>
+      <h1>Applications</h1>
+      <p>Search, organize, and keep every opportunity moving.</p>
+    </div>
+    <a class="button button--primary" routerLink="/applications/new">Add application</a>
+  </div>
+
+  <section class="filter-card card" aria-labelledby="filter-heading">
+    <div class="filter-card__heading">
+      <div>
+        <h2 id="filter-heading">Find applications</h2>
+        <p>Filter your pipeline or change how results are ordered.</p>
+      </div>
+      @if (hasActiveFilters()) {
+        <button class="text-button" type="button" [disabled]="loading()" (click)="clearFilters()">
+          Clear filters
+        </button>
+      }
+    </div>
+
+    <form class="filters" [formGroup]="filters" (ngSubmit)="applyFilters()">
+      <label class="filter-field filter-field--search">
+        <span>Search</span>
+        <input
+          type="search"
+          formControlName="search"
+          placeholder="Company, role, or location"
+          autocomplete="off"
+        />
+      </label>
+
+      <label class="filter-field">
+        <span>Status</span>
+        <select formControlName="status">
+          <option value="">All statuses</option>
+          @for (status of statuses; track status) {
+            <option [value]="status">{{ enumLabel(status) }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span>Employment type</span>
+        <select formControlName="employmentType">
+          <option value="">All types</option>
+          @for (type of employmentTypes; track type) {
+            <option [value]="type">{{ enumLabel(type) }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span>Sort by</span>
+        <select formControlName="sort">
+          @for (option of sortOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="filter-field filter-field--small">
+        <span>Order</span>
+        <select formControlName="direction">
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+      </label>
+
+      <label class="filter-field filter-field--small">
+        <span>Per page</span>
+        <select formControlName="size">
+          @for (size of pageSizes; track size) {
+            <option [ngValue]="size">{{ size }}</option>
+          }
+        </select>
+      </label>
+
+      <button class="button button--primary filter-submit" type="submit" [disabled]="loading()">
+        Apply
+      </button>
+    </form>
+  </section>
+
+  <section class="results card" [attr.aria-busy]="loading()">
+    <div class="results__heading">
+      <div>
+        <h2>Application pipeline</h2>
+        @if (result(); as pageResult) {
+          <p>
+            {{ pageResult.totalElements }}
+            {{ pageResult.totalElements === 1 ? 'application' : 'applications' }}
+          </p>
+        } @else {
+          <p>Your saved opportunities will appear here.</p>
+        }
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state" role="status">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Loading applications...</span>
+      </div>
+    } @else if (error()) {
+      <div class="message-state" role="alert">
+        <div class="state-icon state-icon--error" aria-hidden="true">!</div>
+        <h3>Applications could not be loaded</h3>
+        <p>{{ error() }}</p>
+        <button class="button button--secondary" type="button" (click)="retry()">Try again</button>
+      </div>
+    } @else if (applications().length === 0) {
+      <div class="message-state">
+        <div class="state-icon" aria-hidden="true">&#9633;</div>
+        @if (hasActiveFilters()) {
+          <h3>No matching applications</h3>
+          <p>Try adjusting your search or clearing the current filters.</p>
+          <button class="button button--secondary" type="button" (click)="clearFilters()">
+            Clear filters
+          </button>
+        } @else {
+          <h3>Build your application pipeline</h3>
+          <p>Add your first opportunity to start tracking progress and follow-ups.</p>
+          <a class="button button--primary" routerLink="/applications/new">Add application</a>
+        }
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <caption class="sr-only">
+            Your job applications
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Role</th>
+              <th scope="col">Status</th>
+              <th class="optional-column" scope="col">Location</th>
+              <th class="optional-column" scope="col">Type</th>
+              <th scope="col">Applied</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (application of applications(); track application.id) {
+              <tr>
+                <td class="role-cell" data-label="Role">
+                  <a [routerLink]="['/applications', application.id]">{{ application.jobTitle }}</a>
+                  <span>{{ application.company }}</span>
+                </td>
+                <td data-label="Status">
+                  <span [class]="statusClass(application.status)">
+                    {{ enumLabel(application.status) }}
+                  </span>
+                </td>
+                <td class="optional-column muted" data-label="Location">
+                  {{ application.location || 'Not specified' }}
+                </td>
+                <td class="optional-column muted" data-label="Type">
+                  {{ enumLabel(application.employmentType) }}
+                </td>
+                <td class="muted" data-label="Applied">
+                  @if (application.applicationDate) {
+                    {{ application.applicationDate | date: 'MMM d, y' : 'UTC' }}
+                  } @else {
+                    Not applied
+                  }
+                </td>
+                <td class="row-actions" data-label="Actions">
+                  <a [routerLink]="['/applications', application.id]">View</a>
+                  <a [routerLink]="['/applications', application.id, 'edit']">Edit</a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (result(); as pageResult) {
+        <footer class="pagination">
+          <p>Showing {{ rangeStart() }}–{{ rangeEnd() }} of {{ pageResult.totalElements }}</p>
+          <div class="pagination__controls">
+            <button
+              class="page-button"
+              type="button"
+              [disabled]="pageResult.first || loading()"
+              (click)="goToPage(pageResult.page - 1)"
+            >
+              Previous
+            </button>
+            <span>Page {{ pageResult.page + 1 }} of {{ pageResult.totalPages }}</span>
+            <button
+              class="page-button"
+              type="button"
+              [disabled]="pageResult.last || loading()"
+              (click)="goToPage(pageResult.page + 1)"
+            >
+              Next
+            </button>
+          </div>
+        </footer>
+      }
+    }
+  </section>
+</main>

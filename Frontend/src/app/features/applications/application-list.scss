@@ -1,0 +1,249 @@
+:host {
+  display: block;
+}
+.filter-card {
+  margin-bottom: 24px;
+  padding: 24px;
+}
+.filter-card__heading,
+.results__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.filter-card__heading {
+  margin-bottom: 20px;
+}
+.filter-card__heading h2,
+.results__heading h2 {
+  margin-bottom: 4px;
+  font-size: 1.05rem;
+}
+.filter-card__heading p,
+.results__heading p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+.text-button {
+  padding: 3px;
+  border: 0;
+  color: var(--primary);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+.text-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.filters {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.7fr) repeat(3, minmax(135px, 1fr)) 120px 90px auto;
+  align-items: end;
+  gap: 14px;
+}
+.filter-field {
+  display: grid;
+  gap: 7px;
+  color: #475569;
+  font-size: 0.77rem;
+  font-weight: 700;
+}
+.filter-field input,
+.filter-field select {
+  width: 100%;
+  height: 43px;
+  padding: 0 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+}
+.filter-field input:focus,
+.filter-field select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.11);
+}
+.filter-submit {
+  min-height: 43px;
+}
+.results {
+  overflow: hidden;
+}
+.results__heading {
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.table-wrap {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.87rem;
+}
+th {
+  padding: 11px 18px;
+  color: #64748b;
+  background: #f8fafc;
+  font-size: 0.69rem;
+  letter-spacing: 0.07em;
+  text-align: left;
+  text-transform: uppercase;
+}
+td {
+  padding: 17px 18px;
+  border-top: 1px solid #edf1f5;
+  vertical-align: middle;
+}
+tbody tr:first-child td {
+  border-top: 0;
+}
+tbody tr:hover {
+  background: #fbfdff;
+}
+.role-cell a {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--ink);
+  font-weight: 750;
+  text-decoration: none;
+}
+.role-cell a:hover,
+.row-actions a:hover {
+  color: var(--primary);
+}
+.role-cell span,
+.muted {
+  color: var(--ink-muted);
+}
+.row-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+.row-actions a {
+  margin-left: 14px;
+  color: #475569;
+  font-size: 0.81rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 15px 18px;
+  border-top: 1px solid var(--border);
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+}
+.pagination p {
+  margin: 0;
+}
+.pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.page-button {
+  min-height: 35px;
+  padding: 7px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  color: #334155;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.page-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+@media (max-width: 1180px) {
+  .filters {
+    grid-template-columns: repeat(3, minmax(140px, 1fr));
+  }
+  .filter-field--search {
+    grid-column: span 2;
+  }
+}
+@media (max-width: 950px) {
+  .optional-column {
+    display: none;
+  }
+}
+@media (max-width: 680px) {
+  .filter-card {
+    padding: 20px;
+  }
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .filter-field--search {
+    grid-column: 1 / -1;
+  }
+  .filter-submit {
+    grid-column: 1 / -1;
+  }
+  thead {
+    display: none;
+  }
+  table,
+  tbody,
+  tr,
+  td {
+    display: block;
+    width: 100%;
+  }
+  tbody tr {
+    padding: 16px 18px;
+    border-top: 1px solid var(--border);
+  }
+  tbody tr:first-child {
+    border-top: 0;
+  }
+  td,
+  tbody tr:first-child td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 7px 0;
+    border: 0;
+    text-align: right;
+  }
+  td::before {
+    content: attr(data-label);
+    color: #64748b;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+  .role-cell {
+    align-items: flex-start;
+    flex-direction: column;
+    text-align: left;
+  }
+  .role-cell::before {
+    display: none;
+  }
+  .optional-column {
+    display: none;
+  }
+  .row-actions {
+    justify-content: flex-end;
+  }
+  .pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .pagination__controls {
+    justify-content: space-between;
+  }
+}
