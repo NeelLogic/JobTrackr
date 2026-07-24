@@ -88,7 +88,9 @@
   font-weight: 400;
 }
 .field input.ng-invalid.ng-touched,
-.field textarea.ng-invalid.ng-touched {
+.field select.ng-invalid.ng-touched,
+.field textarea.ng-invalid.ng-touched,
+.field [aria-invalid='true'] {
   border-color: #f97066;
   box-shadow: 0 0 0 3px rgba(240, 68, 56, 0.08);
 }

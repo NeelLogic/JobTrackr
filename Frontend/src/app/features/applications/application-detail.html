@@ -1,4 +1,4 @@
-<main class="page detail-page">
+<main id="main-content" class="page detail-page" tabindex="-1">
   @if (loading()) {
     <section class="card loading-state" role="status">
       <span class="spinner" aria-hidden="true"></span>
@@ -42,7 +42,7 @@
             target="_blank"
             rel="noopener noreferrer"
           >
-            View posting
+            View posting <span class="sr-only">(opens in a new tab)</span>
           </a>
         }
         <a class="button button--primary" [routerLink]="['/applications', item.id, 'edit']">
@@ -131,18 +131,23 @@
       }
     </section>
 
-    <section class="danger-zone card">
+    <section class="danger-zone card" aria-labelledby="delete-heading">
       <div>
-        <h2>Delete application</h2>
-        <p>Permanently remove this opportunity and its history.</p>
+        <h2 id="delete-heading">Delete application</h2>
+        <p id="delete-description">Permanently remove this opportunity and its history.</p>
       </div>
       @if (!confirmingDelete()) {
-        <button class="button danger-button" type="button" (click)="requestDelete()">
+        <button
+          class="button danger-button"
+          type="button"
+          aria-describedby="delete-description"
+          (click)="requestDelete()"
+        >
           Delete application
         </button>
       } @else {
-        <div class="delete-confirmation">
-          <p>Are you sure? This action cannot be undone.</p>
+        <div class="delete-confirmation" role="group" aria-labelledby="delete-confirmation-heading">
+          <p id="delete-confirmation-heading">Are you sure? This action cannot be undone.</p>
           @if (deleteError()) {
             <span class="field-error" role="alert">{{ deleteError() }}</span>
           }

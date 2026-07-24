@@ -246,3 +246,26 @@
     justify-items: start;
   }
 }
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .stat-card:last-child {
+    grid-column: auto;
+  }
+  .card-heading {
+    padding: 20px 18px;
+  }
+  .status-list {
+    padding: 22px 18px 24px;
+  }
+  .recent-item {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+  .recent-item__meta {
+    grid-auto-flow: row;
+    justify-content: start;
+  }
+}

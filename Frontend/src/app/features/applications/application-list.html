@@ -1,4 +1,4 @@
-<main class="page">
+<main id="main-content" class="page" tabindex="-1">
   <div class="page-heading">
     <div>
       <p class="eyebrow">Your pipeline</p>
@@ -89,7 +89,7 @@
       <div>
         <h2>Application pipeline</h2>
         @if (result(); as pageResult) {
-          <p>
+          <p aria-live="polite">
             {{ pageResult.totalElements }}
             {{ pageResult.totalElements === 1 ? 'application' : 'applications' }}
           </p>
@@ -168,8 +168,20 @@
                   }
                 </td>
                 <td class="row-actions" data-label="Actions">
-                  <a [routerLink]="['/applications', application.id]">View</a>
-                  <a [routerLink]="['/applications', application.id, 'edit']">Edit</a>
+                  <a
+                    [routerLink]="['/applications', application.id]"
+                    [attr.aria-label]="
+                      'View ' + application.jobTitle + ' at ' + application.company
+                    "
+                    >View</a
+                  >
+                  <a
+                    [routerLink]="['/applications', application.id, 'edit']"
+                    [attr.aria-label]="
+                      'Edit ' + application.jobTitle + ' at ' + application.company
+                    "
+                    >Edit</a
+                  >
                 </td>
               </tr>
             }
@@ -178,28 +190,34 @@
       </div>
 
       @if (result(); as pageResult) {
-        <footer class="pagination">
-          <p>Showing {{ rangeStart() }}–{{ rangeEnd() }} of {{ pageResult.totalElements }}</p>
+        <nav class="pagination" aria-label="Application pages">
+          <p aria-live="polite">
+            Showing {{ rangeStart() }}&ndash;{{ rangeEnd() }} of {{ pageResult.totalElements }}
+          </p>
           <div class="pagination__controls">
             <button
               class="page-button"
               type="button"
+              aria-label="Go to previous application page"
               [disabled]="pageResult.first || loading()"
               (click)="goToPage(pageResult.page - 1)"
             >
               Previous
             </button>
-            <span>Page {{ pageResult.page + 1 }} of {{ pageResult.totalPages }}</span>
+            <span aria-current="page"
+              >Page {{ pageResult.page + 1 }} of {{ pageResult.totalPages }}</span
+            >
             <button
               class="page-button"
               type="button"
+              aria-label="Go to next application page"
               [disabled]="pageResult.last || loading()"
               (click)="goToPage(pageResult.page + 1)"
             >
               Next
             </button>
           </div>
-        </footer>
+        </nav>
       }
     }
   </section>

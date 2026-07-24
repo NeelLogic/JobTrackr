@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, HostListener, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 
@@ -15,8 +15,17 @@ export class Shell {
   readonly menuOpen = signal(false);
   readonly user = this.auth.user;
 
+  openMenu(): void {
+    this.menuOpen.set(true);
+  }
+
   closeMenu(): void {
     this.menuOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeMenuOnEscape(): void {
+    this.closeMenu();
   }
 
   logout(): void {

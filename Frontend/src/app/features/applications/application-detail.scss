@@ -225,4 +225,8 @@
   .delete-confirmation > div {
     flex-direction: column-reverse;
   }
+  .danger-zone > .button,
+  .delete-confirmation .button {
+    width: 100%;
+  }
 }
