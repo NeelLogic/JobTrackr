@@ -8,7 +8,7 @@ import { apiErrorMessage } from '../../core/api-error';
 @Component({
   selector: 'app-register',
   imports: [ReactiveFormsModule, RouterLink],
-  templateUrl: './register.html'
+  templateUrl: './register.html',
 })
 export class Register {
   readonly loading = signal(false);
@@ -18,17 +18,20 @@ export class Register {
   constructor(
     formBuilder: FormBuilder,
     private readonly auth: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
   ) {
     this.form = formBuilder.nonNullable.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [
-        Validators.required,
-        Validators.minLength(8),
-        Validators.maxLength(72),
-        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
-      ]]
+      password: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(8),
+          Validators.maxLength(72),
+          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/),
+        ],
+      ],
     });
   }
 
@@ -39,10 +42,12 @@ export class Register {
     }
     this.loading.set(true);
     this.error.set('');
-    this.auth.register(this.form.getRawValue()).pipe(finalize(() => this.loading.set(false)))
+    this.auth
+      .register(this.form.getRawValue())
+      .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: () => void this.router.navigate(['/dashboard']),
-        error: error => this.error.set(apiErrorMessage(error, 'Unable to create your account.'))
+        error: (error) => this.error.set(apiErrorMessage(error, 'Unable to create your account.')),
       });
   }
 }
