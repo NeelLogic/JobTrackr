@@ -1,0 +1,129 @@
+:host {
+  display: block;
+}
+.form-page {
+  max-width: 1040px;
+}
+.form-section {
+  margin-bottom: 20px;
+  padding: 28px;
+}
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  margin-bottom: 25px;
+  padding-bottom: 19px;
+  border-bottom: 1px solid var(--border);
+}
+.section-heading > span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--primary);
+  background: #eff6ff;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+.section-heading h2 {
+  margin-bottom: 3px;
+  font-size: 1rem;
+}
+.section-heading p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.83rem;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 21px;
+}
+.form-grid--three {
+  grid-template-columns: repeat(3, 1fr);
+}
+.field {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  color: #334155;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+.field > span b {
+  color: var(--danger);
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 45px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+  transition:
+    border 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.field textarea {
+  min-height: 140px;
+  resize: vertical;
+  line-height: 1.55;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.11);
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+.field input.ng-invalid.ng-touched,
+.field textarea.ng-invalid.ng-touched {
+  border-color: #f97066;
+  box-shadow: 0 0 0 3px rgba(240, 68, 56, 0.08);
+}
+.currency-input {
+  text-transform: uppercase;
+}
+.business-error {
+  margin: 17px 0 0;
+  color: var(--danger);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+.state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+@media (max-width: 760px) {
+  .form-section {
+    padding: 22px 19px;
+  }
+  .form-grid,
+  .form-grid--three {
+    grid-template-columns: 1fr;
+  }
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+}
