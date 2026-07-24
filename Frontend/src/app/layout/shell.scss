@@ -91,10 +91,14 @@
 }
 @media (max-width: 820px) {
   .sidebar {
+    visibility: hidden;
     transform: translateX(-105%);
-    transition: transform 0.22s ease;
+    transition:
+      transform 0.22s ease,
+      visibility 0.22s;
   }
   .sidebar--open {
+    visibility: visible;
     transform: translateX(0);
   }
   .workspace {

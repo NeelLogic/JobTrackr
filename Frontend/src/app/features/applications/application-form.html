@@ -1,4 +1,4 @@
-<main class="page form-page">
+<main id="main-content" class="page form-page" tabindex="-1">
   <div class="page-heading">
     <div>
       <p class="eyebrow">{{ isEdit() ? 'Update opportunity' : 'New opportunity' }}</p>
@@ -34,9 +34,17 @@
       </div>
     </section>
   } @else {
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <form
+      [formGroup]="form"
+      [attr.aria-busy]="saving()"
+      [attr.aria-describedby]="saveError() ? 'application-save-error' : null"
+      (ngSubmit)="submit()"
+      novalidate
+    >
       @if (saveError()) {
-        <div class="alert alert--error" role="alert">{{ saveError() }}</div>
+        <div id="application-save-error" class="alert alert--error" role="alert">
+          {{ saveError() }}
+        </div>
       }
 
       <section class="form-section card">
@@ -51,43 +59,74 @@
         <div class="form-grid">
           <label class="field">
             <span>Company <b aria-hidden="true">*</b></span>
-            <input type="text" formControlName="company" autocomplete="organization" required />
+            <input
+              id="application-company"
+              type="text"
+              formControlName="company"
+              autocomplete="organization"
+              required
+              [attr.aria-invalid]="fieldError('company') ? 'true' : null"
+              [attr.aria-describedby]="fieldError('company') ? 'application-company-error' : null"
+            />
             @if (fieldError('company'); as error) {
-              <small class="field-error">{{ error }}</small>
+              <small id="application-company-error" class="field-error" role="alert">{{
+                error
+              }}</small>
             }
           </label>
 
           <label class="field">
             <span>Job title <b aria-hidden="true">*</b></span>
             <input
+              id="application-job-title"
               type="text"
               formControlName="jobTitle"
               autocomplete="organization-title"
               required
+              [attr.aria-invalid]="fieldError('jobTitle') ? 'true' : null"
+              [attr.aria-describedby]="
+                fieldError('jobTitle') ? 'application-job-title-error' : null
+              "
             />
             @if (fieldError('jobTitle'); as error) {
-              <small class="field-error">{{ error }}</small>
+              <small id="application-job-title-error" class="field-error" role="alert">{{
+                error
+              }}</small>
             }
           </label>
 
           <label class="field">
             <span>Location</span>
-            <input type="text" formControlName="location" placeholder="Toronto, ON or Remote" />
+            <input
+              id="application-location"
+              type="text"
+              formControlName="location"
+              placeholder="Toronto, ON or Remote"
+              [attr.aria-invalid]="fieldError('location') ? 'true' : null"
+              [attr.aria-describedby]="fieldError('location') ? 'application-location-error' : null"
+            />
             @if (fieldError('location'); as error) {
-              <small class="field-error">{{ error }}</small>
+              <small id="application-location-error" class="field-error" role="alert">{{
+                error
+              }}</small>
             }
           </label>
 
           <label class="field">
             <span>Job URL</span>
             <input
+              id="application-job-url"
               type="url"
               formControlName="jobUrl"
               placeholder="https://company.com/jobs/..."
               inputmode="url"
+              [attr.aria-invalid]="fieldError('jobUrl') ? 'true' : null"
+              [attr.aria-describedby]="fieldError('jobUrl') ? 'application-job-url-error' : null"
             />
             @if (fieldError('jobUrl'); as error) {
-              <small class="field-error">{{ error }}</small>
+              <small id="application-job-url-error" class="field-error" role="alert">{{
+                error
+              }}</small>
             }
           </label>
         </div>
@@ -105,7 +144,7 @@
         <div class="form-grid form-grid--three">
           <label class="field">
             <span>Status <b aria-hidden="true">*</b></span>
-            <select formControlName="status" required>
+            <select id="application-status" formControlName="status" required>
               @for (status of statuses; track status) {
                 <option [value]="status">{{ enumLabel(status) }}</option>
               }
@@ -114,7 +153,7 @@
 
           <label class="field">
             <span>Employment type <b aria-hidden="true">*</b></span>
-            <select formControlName="employmentType" required>
+            <select id="application-employment-type" formControlName="employmentType" required>
               @for (type of employmentTypes; track type) {
                 <option [value]="type">{{ enumLabel(type) }}</option>
               }
@@ -123,15 +162,37 @@
 
           <label class="field">
             <span>Application date</span>
-            <input type="date" formControlName="applicationDate" [max]="maxApplicationDate" />
+            <input
+              id="application-date"
+              type="date"
+              formControlName="applicationDate"
+              [max]="maxApplicationDate"
+              [attr.aria-invalid]="
+                fieldError('applicationDate') ||
+                (form.hasError('applicationDateRequired') &&
+                  (submitted() || form.controls.applicationDate.touched))
+                  ? 'true'
+                  : null
+              "
+              [attr.aria-describedby]="
+                fieldError('applicationDate')
+                  ? 'application-date-error'
+                  : form.hasError('applicationDateRequired') &&
+                      (submitted() || form.controls.applicationDate.touched)
+                    ? 'application-date-required-error'
+                    : null
+              "
+            />
             @if (fieldError('applicationDate'); as error) {
-              <small class="field-error">{{ error }}</small>
+              <small id="application-date-error" class="field-error" role="alert">{{
+                error
+              }}</small>
             }
           </label>
 
           <label class="field">
             <span>Follow-up date</span>
-            <input type="date" formControlName="followUpDate" />
+            <input id="application-follow-up-date" type="date" formControlName="followUpDate" />
           </label>
         </div>
 
@@ -139,7 +200,9 @@
           form.hasError('applicationDateRequired') &&
           (submitted() || form.controls.applicationDate.touched)
         ) {
-          <p class="business-error">Application date is required unless the role is saved.</p>
+          <p id="application-date-required-error" class="business-error" role="alert">
+            Application date is required unless the role is saved.
+          </p>
         }
       </section>
 
@@ -155,41 +218,74 @@
         <div class="form-grid form-grid--three">
           <label class="field">
             <span>Minimum salary</span>
-            <input type="number" formControlName="salaryMin" min="0" step="0.01" />
+            <input
+              id="application-salary-min"
+              type="number"
+              formControlName="salaryMin"
+              min="0"
+              step="0.01"
+              [attr.aria-invalid]="fieldError('salaryMin') ? 'true' : null"
+              [attr.aria-describedby]="
+                fieldError('salaryMin') ? 'application-salary-min-error' : null
+              "
+            />
             @if (fieldError('salaryMin'); as error) {
-              <small class="field-error">{{ error }}</small>
+              <small id="application-salary-min-error" class="field-error" role="alert">{{
+                error
+              }}</small>
             }
           </label>
 
           <label class="field">
             <span>Maximum salary</span>
-            <input type="number" formControlName="salaryMax" min="0" step="0.01" />
+            <input
+              id="application-salary-max"
+              type="number"
+              formControlName="salaryMax"
+              min="0"
+              step="0.01"
+              [attr.aria-invalid]="fieldError('salaryMax') ? 'true' : null"
+              [attr.aria-describedby]="
+                fieldError('salaryMax') ? 'application-salary-max-error' : null
+              "
+            />
             @if (fieldError('salaryMax'); as error) {
-              <small class="field-error">{{ error }}</small>
+              <small id="application-salary-max-error" class="field-error" role="alert">{{
+                error
+              }}</small>
             }
           </label>
 
           <label class="field">
             <span>Currency</span>
             <input
+              id="application-salary-currency"
               class="currency-input"
               type="text"
               formControlName="salaryCurrency"
               maxlength="3"
               placeholder="CAD"
               autocapitalize="characters"
+              [attr.aria-invalid]="fieldError('salaryCurrency') ? 'true' : null"
+              [attr.aria-describedby]="
+                fieldError('salaryCurrency') ? 'application-salary-currency-error' : null
+              "
             />
             @if (fieldError('salaryCurrency'); as error) {
-              <small class="field-error">{{ error }}</small>
+              <small id="application-salary-currency-error" class="field-error" role="alert">{{
+                error
+              }}</small>
             }
           </label>
         </div>
 
         @if (form.hasError('salaryRange') && submitted()) {
-          <p class="business-error">Minimum salary cannot exceed maximum salary.</p>
+          <p class="business-error" role="alert">Minimum salary cannot exceed maximum salary.</p>
         }
         @if (form.hasError('salaryCurrencyRequired') && submitted()) {
-          <p class="business-error">Currency is required when salary information is provided.</p>
+          <p class="business-error" role="alert">
+            Currency is required when salary information is provided.
+          </p>
         }
       </section>
 
@@ -205,12 +301,15 @@
         <label class="field">
           <span>Application notes</span>
           <textarea
+            id="application-notes"
             formControlName="notes"
             rows="7"
             placeholder="Recruiter details, interview preparation, referral information..."
+            [attr.aria-invalid]="fieldError('notes') ? 'true' : null"
+            [attr.aria-describedby]="fieldError('notes') ? 'application-notes-error' : null"
           ></textarea>
           @if (fieldError('notes'); as error) {
-            <small class="field-error">{{ error }}</small>
+            <small id="application-notes-error" class="field-error" role="alert">{{ error }}</small>
           }
         </label>
       </section>

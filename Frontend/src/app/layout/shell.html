@@ -1,5 +1,12 @@
 <div class="app-shell">
-  <aside class="sidebar" [class.sidebar--open]="menuOpen()">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <aside
+    id="primary-navigation"
+    class="sidebar"
+    aria-label="Application navigation"
+    [class.sidebar--open]="menuOpen()"
+  >
     <div class="sidebar__top">
       <a class="brand brand--light" routerLink="/dashboard" (click)="closeMenu()"
         >Job<span>Trackr</span></a
@@ -50,7 +57,12 @@
   </aside>
 
   @if (menuOpen()) {
-    <button class="backdrop" aria-label="Close navigation" (click)="closeMenu()"></button>
+    <button
+      class="backdrop"
+      type="button"
+      aria-label="Close navigation"
+      (click)="closeMenu()"
+    ></button>
   }
 
   <section class="workspace">
@@ -59,7 +71,9 @@
         class="icon-button"
         type="button"
         aria-label="Open navigation"
-        (click)="menuOpen.set(true)"
+        aria-controls="primary-navigation"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="openMenu()"
       >
         &#9776;
       </button>

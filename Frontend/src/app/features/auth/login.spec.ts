@@ -62,6 +62,7 @@ describe('Login', () => {
     component.form.setValue({ email: 'alex@example.com', password: 'Password1' });
 
     component.submit();
+    component.submit();
 
     expect(auth.login).toHaveBeenCalledOnce();
     expect(component.loading()).toBe(true);

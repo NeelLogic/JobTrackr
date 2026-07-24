@@ -46,6 +46,14 @@ a {
 a {
   color: var(--primary);
 }
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.3);
+  outline-offset: 2px;
+}
 h1,
 h2,
 h3,
@@ -71,6 +79,24 @@ h3,
   &--light {
     color: #fff;
   }
+}
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: #fff;
+  background: #111827;
+  font-weight: 750;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 0.15s ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 .button {
@@ -251,6 +277,10 @@ h3,
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
 }
+.auth-card input[aria-invalid='true'] {
+  border-color: #f97066;
+  box-shadow: 0 0 0 3px rgba(240, 68, 56, 0.08);
+}
 .field-error {
   color: var(--danger);
   font-size: 0.78rem;
@@ -425,6 +455,17 @@ h3,
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 
