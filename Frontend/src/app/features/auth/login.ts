@@ -8,7 +8,7 @@ import { apiErrorMessage } from '../../core/api-error';
 @Component({
   selector: 'app-login',
   imports: [ReactiveFormsModule, RouterLink],
-  templateUrl: './login.html'
+  templateUrl: './login.html',
 })
 export class Login {
   readonly loading = signal(false);
@@ -18,11 +18,11 @@ export class Login {
   constructor(
     formBuilder: FormBuilder,
     private readonly auth: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
   ) {
     this.form = formBuilder.nonNullable.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
     });
   }
 
@@ -33,10 +33,12 @@ export class Login {
     }
     this.loading.set(true);
     this.error.set('');
-    this.auth.login(this.form.getRawValue()).pipe(finalize(() => this.loading.set(false)))
+    this.auth
+      .login(this.form.getRawValue())
+      .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: () => void this.router.navigate(['/dashboard']),
-        error: error => this.error.set(apiErrorMessage(error, 'Invalid email or password.'))
+        error: (error) => this.error.set(apiErrorMessage(error, 'Invalid email or password.')),
       });
   }
 }

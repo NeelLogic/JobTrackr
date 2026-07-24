@@ -15,13 +15,15 @@ export class AuthService {
   constructor(private readonly http: HttpClient) {}
 
   login(request: LoginRequest) {
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, request)
-      .pipe(tap(response => this.persist(response)));
+    return this.http
+      .post<AuthResponse>(`${environment.apiUrl}/auth/login`, request)
+      .pipe(tap((response) => this.persist(response)));
   }
 
   register(request: RegisterRequest) {
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, request)
-      .pipe(tap(response => this.persist(response)));
+    return this.http
+      .post<AuthResponse>(`${environment.apiUrl}/auth/register`, request)
+      .pipe(tap((response) => this.persist(response)));
   }
 
   token(): string | null {
@@ -41,7 +43,7 @@ export class AuthService {
   private readSession(): AuthResponse | null {
     try {
       const value = localStorage.getItem(this.storageKey);
-      return value ? JSON.parse(value) as AuthResponse : null;
+      return value ? (JSON.parse(value) as AuthResponse) : null;
     } catch {
       localStorage.removeItem(this.storageKey);
       return null;
