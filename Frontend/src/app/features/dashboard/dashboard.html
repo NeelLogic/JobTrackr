@@ -1,0 +1,118 @@
+<main class="page">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Overview</p>
+      <h1>Welcome back, {{ firstName() }}</h1>
+      <p>Here is the latest view of your job-search pipeline.</p>
+    </div>
+    <a class="button button--primary" routerLink="/applications/new">Add application</a>
+  </div>
+
+  @if (loading()) {
+    <section class="card loading-state" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Loading your dashboard...</span>
+    </section>
+  } @else if (error()) {
+    <section class="card message-state" role="alert">
+      <div class="state-icon state-icon--error" aria-hidden="true">!</div>
+      <h2>Dashboard could not be loaded</h2>
+      <p>{{ error() }}</p>
+      <button class="button button--secondary" type="button" (click)="retry()">Try again</button>
+    </section>
+  } @else if (summary(); as dashboard) {
+    <section class="stats-grid" aria-label="Application statistics">
+      @for (stat of stats(); track stat.label) {
+        <article class="stat-card card" [attr.data-tone]="stat.tone">
+          <div class="stat-card__accent" aria-hidden="true"></div>
+          <p>{{ stat.label }}</p>
+          <strong>{{ stat.value }}</strong>
+          <span>{{ stat.description }}</span>
+        </article>
+      }
+    </section>
+
+    @if (dashboard.totalApplications === 0) {
+      <section class="card empty-state dashboard-empty">
+        <div class="empty-icon" aria-hidden="true">&#8599;</div>
+        <h2>Start building your pipeline</h2>
+        <p>Add your first opportunity to unlock status analytics and recent activity.</p>
+        <a class="button button--primary" routerLink="/applications/new">Add application</a>
+      </section>
+    } @else {
+      <div class="dashboard-grid">
+        <section class="analytics-card card">
+          <div class="card-heading">
+            <div>
+              <h2>Applications by status</h2>
+              <p>How your current pipeline is distributed.</p>
+            </div>
+            <a routerLink="/applications">View pipeline</a>
+          </div>
+
+          <div class="status-list">
+            @for (row of statusRows(); track row.status) {
+              <div class="status-row">
+                <div class="status-row__label">
+                  <span>{{ enumLabel(row.status) }}</span>
+                  <strong>{{ row.count }}</strong>
+                </div>
+                <div
+                  class="status-bar"
+                  role="progressbar"
+                  [attr.aria-label]="enumLabel(row.status)"
+                  [attr.aria-valuenow]="row.count"
+                  aria-valuemin="0"
+                  [attr.aria-valuemax]="dashboard.totalApplications"
+                >
+                  <span
+                    [class]="'status-fill status-fill--' + row.status.toLowerCase()"
+                    [style.width.%]="row.percentage"
+                  ></span>
+                </div>
+                <span class="status-row__percentage">{{ row.percentage }}%</span>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="recent-card card">
+          <div class="card-heading">
+            <div>
+              <h2>Recent applications</h2>
+              <p>Your five most recently updated opportunities.</p>
+            </div>
+            <a routerLink="/applications">View all</a>
+          </div>
+
+          <div class="recent-list">
+            @for (application of dashboard.recentApplications; track application.id) {
+              <a class="recent-item" [routerLink]="['/applications', application.id]">
+                <div class="company-mark" aria-hidden="true">
+                  {{ application.company.charAt(0).toUpperCase() }}
+                </div>
+                <div class="recent-item__main">
+                  <strong>{{ application.jobTitle }}</strong>
+                  <span>{{ application.company }}</span>
+                </div>
+                <div class="recent-item__meta">
+                  <span [class]="statusClass(application.status)">
+                    {{ enumLabel(application.status) }}
+                  </span>
+                  <time [attr.datetime]="application.updatedAt">
+                    {{ application.updatedAt | date: 'MMM d' }}
+                  </time>
+                </div>
+              </a>
+            } @empty {
+              <div class="recent-empty">
+                <p>No recent applications are available.</p>
+                <a routerLink="/applications/new">Add an application</a>
+              </div>
+            }
+          </div>
+        </section>
+      </div>
+    }
+  }
+</main>
