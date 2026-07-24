@@ -1,0 +1,171 @@
+<main class="page detail-page">
+  @if (loading()) {
+    <section class="card loading-state" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Loading application...</span>
+    </section>
+  } @else if (error()) {
+    <section class="card message-state" role="alert">
+      <div class="state-icon state-icon--error" aria-hidden="true">!</div>
+      <h1>Application could not be loaded</h1>
+      <p>{{ error() }}</p>
+      <div class="state-actions">
+        @if (applicationId() !== null) {
+          <button class="button button--secondary" type="button" (click)="retry()">
+            Try again
+          </button>
+        }
+        <a class="button button--primary" routerLink="/applications">Back to applications</a>
+      </div>
+    </section>
+  } @else if (application(); as item) {
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/applications">Applications</a>
+      <span aria-hidden="true">/</span>
+      <span>{{ item.company }}</span>
+    </nav>
+
+    <header class="detail-header">
+      <div>
+        <div class="detail-header__meta">
+          <span [class]="statusClass(item.status)">{{ enumLabel(item.status) }}</span>
+          <span>Updated {{ item.updatedAt | date: 'MMM d, y' }}</span>
+        </div>
+        <h1>{{ item.jobTitle }}</h1>
+        <p>{{ item.company }}</p>
+      </div>
+      <div class="header-actions">
+        @if (item.jobUrl) {
+          <a
+            class="button button--secondary"
+            [href]="item.jobUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View posting
+          </a>
+        }
+        <a class="button button--primary" [routerLink]="['/applications', item.id, 'edit']">
+          Edit application
+        </a>
+      </div>
+    </header>
+
+    <div class="detail-layout">
+      <section class="detail-card card">
+        <div class="card-heading">
+          <h2>Application overview</h2>
+          <p>The core details for this opportunity.</p>
+        </div>
+        <dl class="detail-grid">
+          <div>
+            <dt>Company</dt>
+            <dd>{{ item.company }}</dd>
+          </div>
+          <div>
+            <dt>Employment type</dt>
+            <dd>{{ enumLabel(item.employmentType) }}</dd>
+          </div>
+          <div>
+            <dt>Location</dt>
+            <dd>{{ item.location || 'Not specified' }}</dd>
+          </div>
+          <div>
+            <dt>Application date</dt>
+            <dd>
+              @if (item.applicationDate) {
+                {{ item.applicationDate | date: 'MMMM d, y' : 'UTC' }}
+              } @else {
+                Not applied
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Follow-up date</dt>
+            <dd>
+              @if (item.followUpDate) {
+                {{ item.followUpDate | date: 'MMMM d, y' : 'UTC' }}
+              } @else {
+                Not scheduled
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Salary</dt>
+            <dd>{{ salary() }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <aside class="timeline-card card">
+        <div class="card-heading">
+          <h2>Record history</h2>
+          <p>When this application changed.</p>
+        </div>
+        <div class="timeline-item">
+          <span aria-hidden="true"></span>
+          <div>
+            <strong>Last updated</strong>
+            <p>{{ item.updatedAt | date: 'MMM d, y, h:mm a' }}</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <span aria-hidden="true"></span>
+          <div>
+            <strong>Added to JobTrackr</strong>
+            <p>{{ item.createdAt | date: 'MMM d, y, h:mm a' }}</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="notes-card card">
+      <div class="card-heading">
+        <h2>Notes</h2>
+        <p>Contacts, preparation, and follow-up context.</p>
+      </div>
+      @if (item.notes) {
+        <p class="notes-content">{{ item.notes }}</p>
+      } @else {
+        <p class="notes-empty">No notes have been added.</p>
+      }
+    </section>
+
+    <section class="danger-zone card">
+      <div>
+        <h2>Delete application</h2>
+        <p>Permanently remove this opportunity and its history.</p>
+      </div>
+      @if (!confirmingDelete()) {
+        <button class="button danger-button" type="button" (click)="requestDelete()">
+          Delete application
+        </button>
+      } @else {
+        <div class="delete-confirmation">
+          <p>Are you sure? This action cannot be undone.</p>
+          @if (deleteError()) {
+            <span class="field-error" role="alert">{{ deleteError() }}</span>
+          }
+          <div>
+            <button
+              class="button button--secondary"
+              type="button"
+              [disabled]="deleting()"
+              (click)="cancelDelete()"
+            >
+              Cancel
+            </button>
+            <button
+              class="button danger-button"
+              type="button"
+              [disabled]="deleting()"
+              (click)="deleteApplication()"
+            >
+              {{ deleting() ? 'Deleting...' : 'Yes, delete' }}
+            </button>
+          </div>
+        </div>
+      }
+    </section>
+  }
+</main>

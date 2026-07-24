@@ -1,0 +1,226 @@
+<main class="page form-page">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">{{ isEdit() ? 'Update opportunity' : 'New opportunity' }}</p>
+      <h1>{{ isEdit() ? 'Edit application' : 'Add application' }}</h1>
+      <p>
+        {{
+          isEdit()
+            ? 'Keep the role, status, and next steps current.'
+            : 'Capture the details you need to manage this opportunity.'
+        }}
+      </p>
+    </div>
+    <a class="button button--secondary" [routerLink]="cancelLink()">Cancel</a>
+  </div>
+
+  @if (loading()) {
+    <section class="card loading-state" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Loading application...</span>
+    </section>
+  } @else if (loadError()) {
+    <section class="card message-state" role="alert">
+      <div class="state-icon state-icon--error" aria-hidden="true">!</div>
+      <h2>Application could not be loaded</h2>
+      <p>{{ loadError() }}</p>
+      <div class="state-actions">
+        @if (applicationId() !== null) {
+          <button class="button button--secondary" type="button" (click)="retryLoad()">
+            Try again
+          </button>
+        }
+        <a class="button button--primary" routerLink="/applications">Back to applications</a>
+      </div>
+    </section>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (saveError()) {
+        <div class="alert alert--error" role="alert">{{ saveError() }}</div>
+      }
+
+      <section class="form-section card">
+        <div class="section-heading">
+          <span>1</span>
+          <div>
+            <h2>Role information</h2>
+            <p>Start with the company and position.</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Company <b aria-hidden="true">*</b></span>
+            <input type="text" formControlName="company" autocomplete="organization" required />
+            @if (fieldError('company'); as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Job title <b aria-hidden="true">*</b></span>
+            <input
+              type="text"
+              formControlName="jobTitle"
+              autocomplete="organization-title"
+              required
+            />
+            @if (fieldError('jobTitle'); as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Location</span>
+            <input type="text" formControlName="location" placeholder="Toronto, ON or Remote" />
+            @if (fieldError('location'); as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Job URL</span>
+            <input
+              type="url"
+              formControlName="jobUrl"
+              placeholder="https://company.com/jobs/..."
+              inputmode="url"
+            />
+            @if (fieldError('jobUrl'); as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+        </div>
+      </section>
+
+      <section class="form-section card">
+        <div class="section-heading">
+          <span>2</span>
+          <div>
+            <h2>Application progress</h2>
+            <p>Track where this opportunity stands and when to follow up.</p>
+          </div>
+        </div>
+
+        <div class="form-grid form-grid--three">
+          <label class="field">
+            <span>Status <b aria-hidden="true">*</b></span>
+            <select formControlName="status" required>
+              @for (status of statuses; track status) {
+                <option [value]="status">{{ enumLabel(status) }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Employment type <b aria-hidden="true">*</b></span>
+            <select formControlName="employmentType" required>
+              @for (type of employmentTypes; track type) {
+                <option [value]="type">{{ enumLabel(type) }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Application date</span>
+            <input type="date" formControlName="applicationDate" [max]="maxApplicationDate" />
+            @if (fieldError('applicationDate'); as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Follow-up date</span>
+            <input type="date" formControlName="followUpDate" />
+          </label>
+        </div>
+
+        @if (
+          form.hasError('applicationDateRequired') &&
+          (submitted() || form.controls.applicationDate.touched)
+        ) {
+          <p class="business-error">Application date is required unless the role is saved.</p>
+        }
+      </section>
+
+      <section class="form-section card">
+        <div class="section-heading">
+          <span>3</span>
+          <div>
+            <h2>Compensation</h2>
+            <p>Optional salary details help you compare opportunities.</p>
+          </div>
+        </div>
+
+        <div class="form-grid form-grid--three">
+          <label class="field">
+            <span>Minimum salary</span>
+            <input type="number" formControlName="salaryMin" min="0" step="0.01" />
+            @if (fieldError('salaryMin'); as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Maximum salary</span>
+            <input type="number" formControlName="salaryMax" min="0" step="0.01" />
+            @if (fieldError('salaryMax'); as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Currency</span>
+            <input
+              class="currency-input"
+              type="text"
+              formControlName="salaryCurrency"
+              maxlength="3"
+              placeholder="CAD"
+              autocapitalize="characters"
+            />
+            @if (fieldError('salaryCurrency'); as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+        </div>
+
+        @if (form.hasError('salaryRange') && submitted()) {
+          <p class="business-error">Minimum salary cannot exceed maximum salary.</p>
+        }
+        @if (form.hasError('salaryCurrencyRequired') && submitted()) {
+          <p class="business-error">Currency is required when salary information is provided.</p>
+        }
+      </section>
+
+      <section class="form-section card">
+        <div class="section-heading">
+          <span>4</span>
+          <div>
+            <h2>Notes</h2>
+            <p>Add contacts, interview details, or reminders.</p>
+          </div>
+        </div>
+
+        <label class="field">
+          <span>Application notes</span>
+          <textarea
+            formControlName="notes"
+            rows="7"
+            placeholder="Recruiter details, interview preparation, referral information..."
+          ></textarea>
+          @if (fieldError('notes'); as error) {
+            <small class="field-error">{{ error }}</small>
+          }
+        </label>
+      </section>
+
+      <div class="form-actions">
+        <a class="button button--secondary" [routerLink]="cancelLink()">Cancel</a>
+        <button class="button button--primary" type="submit" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : isEdit() ? 'Save changes' : 'Add application' }}
+        </button>
+      </div>
+    </form>
+  }
+</main>
