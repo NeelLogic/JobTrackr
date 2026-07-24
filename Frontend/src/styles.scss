@@ -498,3 +498,42 @@ h3,
     flex-direction: column;
   }
 }
+
+@media (max-width: 480px) {
+  .auth-brand {
+    padding: 24px 20px 28px;
+  }
+  .auth-brand > div {
+    margin-top: 48px;
+  }
+  .auth-brand h1 {
+    margin-bottom: 16px;
+    font-size: 2.05rem;
+  }
+  .auth-brand div > p:last-child {
+    font-size: 0.96rem;
+    line-height: 1.6;
+  }
+  .auth-panel {
+    padding: 38px 20px;
+  }
+  .auth-heading {
+    margin-bottom: 24px;
+  }
+  .page {
+    padding: 30px 16px;
+  }
+  .page-heading {
+    gap: 20px;
+    margin-bottom: 26px;
+  }
+  .page-heading > .button {
+    width: 100%;
+  }
+  .empty-state,
+  .loading-state,
+  .message-state {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+}

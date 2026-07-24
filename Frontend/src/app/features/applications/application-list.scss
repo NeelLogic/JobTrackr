@@ -247,3 +247,43 @@ tbody tr:hover {
     justify-content: space-between;
   }
 }
+
+@media (max-width: 480px) {
+  .filter-card {
+    padding: 18px 16px;
+  }
+  .filter-card__heading,
+  .results__heading {
+    flex-direction: column;
+  }
+  .filters {
+    grid-template-columns: 1fr;
+  }
+  .filter-field,
+  .filter-field--search,
+  .filter-submit {
+    min-width: 0;
+    grid-column: 1;
+  }
+  .results__heading {
+    padding: 20px 18px;
+  }
+  .row-actions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .row-actions a {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+  .pagination {
+    padding: 15px 16px;
+  }
+  .page-button {
+    min-height: 44px;
+  }
+}
