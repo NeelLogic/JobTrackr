@@ -667,6 +667,74 @@ class ApiIntegrationTests {
     }
 
     @Test
+    void analyticsCompaniesAndFollowUpsAreUserScoped() throws Exception {
+        String owner = register("insights-owner");
+        String other = register("insights-other");
+        long ownerApplication = json.readTree(create(owner, "Private Analytics Co"))
+                .get("id").asLong();
+        create(other, "Other User Co");
+
+        String update = """
+                {
+                  "company":"Private Analytics Co",
+                  "jobTitle":"Software Engineer",
+                  "applicationDate":"2026-07-21",
+                  "status":"INTERVIEW",
+                  "employmentType":"FULL_TIME",
+                  "followUpDate":"2026-07-22"
+                }
+                """;
+        mvc.perform(put("/api/applications/" + ownerApplication)
+                        .header("Authorization", "Bearer " + owner)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(update))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/analytics")
+                        .header("Authorization", "Bearer " + owner)
+                        .param("range", "ALL_TIME"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.applicationsInRange").value(1))
+                .andExpect(jsonPath("$.funnel[2].stage").value("INTERVIEW"))
+                .andExpect(jsonPath("$.funnel[2].applications").value(1))
+                .andExpect(jsonPath("$.topCompanies[0].company").value("Private Analytics Co"));
+
+        mvc.perform(get("/api/companies")
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalCompanies").value(1))
+                .andExpect(jsonPath("$.companies[0].company").value("Private Analytics Co"));
+
+        mvc.perform(get("/api/follow-ups")
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.overdueCount").value(1))
+                .andExpect(jsonPath("$.overdue[0].company").value("Private Analytics Co"));
+    }
+
+    @Test
+    void insightsRejectInvalidParametersAndAnonymousRequests() throws Exception {
+        String token = register("insights-validation");
+
+        mvc.perform(get("/api/analytics")
+                        .header("Authorization", "Bearer " + token)
+                        .param("range", "LAST_CENTURY"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(
+                        "Range must be THIRTY_DAYS, NINETY_DAYS, SIX_MONTHS, or ALL_TIME"
+                ));
+        mvc.perform(get("/api/companies")
+                        .header("Authorization", "Bearer " + token)
+                        .param("sort", "user.passwordHash"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(
+                        "Unsupported company sort field: user.passwordHash"
+                ));
+        mvc.perform(get("/api/follow-ups"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void salaryRangeIsValidated() throws Exception {
         String token = register("salary");
         String body = """
