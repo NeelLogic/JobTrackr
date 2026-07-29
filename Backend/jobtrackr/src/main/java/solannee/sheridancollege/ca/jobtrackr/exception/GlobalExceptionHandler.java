@@ -37,6 +37,22 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.BAD_REQUEST, "Request violates a data constraint", request, null);
     }
 
+    @ExceptionHandler(IntegrationUnavailableException.class)
+    ResponseEntity<ApiError> integrationUnavailable(
+            IntegrationUnavailableException exception,
+            HttpServletRequest request
+    ) {
+        return error(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(ExternalServiceException.class)
+    ResponseEntity<ApiError> externalService(
+            ExternalServiceException exception,
+            HttpServletRequest request
+    ) {
+        return error(HttpStatus.BAD_GATEWAY, exception.getMessage(), request, null);
+    }
+
     @ExceptionHandler(GoogleAuthenticationException.class)
     ResponseEntity<ApiError> googleAuthentication(
             GoogleAuthenticationException exception,
