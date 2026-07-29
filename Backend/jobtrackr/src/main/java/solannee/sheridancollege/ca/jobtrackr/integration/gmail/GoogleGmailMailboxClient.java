@@ -4,8 +4,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.HtmlUtils;
+import org.springframework.web.util.UriUtils;
 import solannee.sheridancollege.ca.jobtrackr.exception.ExternalServiceException;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -30,13 +32,7 @@ public class GoogleGmailMailboxClient implements GmailMailboxClient {
     public List<GmailMessage> listMessages(String accessToken, String query, int maxResults) {
         try {
             MessageListPayload list = restClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host("gmail.googleapis.com")
-                            .path("/gmail/v1/users/me/messages")
-                            .queryParam("q", query)
-                            .queryParam("maxResults", maxResults)
-                            .build())
+                    .uri(listUri(query, maxResults))
                     .headers(headers -> headers.setBearerAuth(accessToken))
                     .retrieve()
                     .body(MessageListPayload.class);
@@ -56,6 +52,13 @@ public class GoogleGmailMailboxClient implements GmailMailboxClient {
         } catch (RestClientException exception) {
             throw new ExternalServiceException("Unable to scan Gmail messages", exception);
         }
+    }
+
+    static URI listUri(String query, int maxResults) {
+        String encodedQuery = UriUtils.encodeQueryParam(query, StandardCharsets.UTF_8);
+        return URI.create(MESSAGES_ENDPOINT
+                + "?q=" + encodedQuery
+                + "&maxResults=" + maxResults);
     }
 
     private GmailMessage getMessage(String accessToken, String messageId) {
