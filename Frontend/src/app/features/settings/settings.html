@@ -1,0 +1,63 @@
+<main id="main-content" class="page" tabindex="-1">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Account</p>
+      <h1>Settings</h1>
+      <p>Manage how you sign in to JobTrackr.</p>
+    </div>
+  </header>
+
+  <section class="settings-card card" aria-labelledby="profile-heading">
+    <div>
+      <p class="eyebrow">Profile</p>
+      <h2 id="profile-heading">{{ user()?.name }}</h2>
+      <p>{{ user()?.email }}</p>
+    </div>
+  </section>
+
+  <section class="settings-card card" aria-labelledby="connections-heading">
+    <div class="settings-card__heading">
+      <div>
+        <p class="eyebrow">Security</p>
+        <h2 id="connections-heading">Connected accounts</h2>
+        <p>Connect Google as a secure alternative way to sign in.</p>
+      </div>
+      @if (isGoogleConnected()) {
+        <span class="connection-status">Connected</span>
+      }
+    </div>
+
+    @if (error()) {
+      <div class="alert alert--error" role="alert">{{ error() }}</div>
+    }
+    @if (success()) {
+      <div class="alert alert--success" role="status">{{ success() }}</div>
+    }
+
+    @if (loading()) {
+      <div class="connection-loading" role="status">
+        <span class="spinner" aria-hidden="true"></span>
+        Loading connected accounts...
+      </div>
+    } @else if (isGoogleConnected()) {
+      <div class="connection-row">
+        <div class="google-mark" aria-hidden="true">G</div>
+        <div>
+          <strong>Google</strong>
+          <span>Available for sign-in</span>
+        </div>
+      </div>
+    } @else {
+      <div class="connection-row connection-row--action">
+        <div>
+          <strong>Google</strong>
+          <span>The Google email must match {{ user()?.email }}.</span>
+        </div>
+        <app-google-sign-in-button
+          [disabled]="linking()"
+          (credentialSelected)="linkGoogle($event)"
+        />
+      </div>
+    }
+  </section>
+</main>

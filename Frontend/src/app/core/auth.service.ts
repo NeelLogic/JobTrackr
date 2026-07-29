@@ -2,7 +2,13 @@ import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models/auth.models';
+import {
+  AuthResponse,
+  ConnectedIdentity,
+  LoginRequest,
+  RegisterRequest,
+  User,
+} from '../models/auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -24,6 +30,22 @@ export class AuthService {
     return this.http
       .post<AuthResponse>(`${environment.apiUrl}/auth/register`, request)
       .pipe(tap((response) => this.persist(response)));
+  }
+
+  loginWithGoogle(credential: string) {
+    return this.http
+      .post<AuthResponse>(`${environment.apiUrl}/auth/google`, { credential })
+      .pipe(tap((response) => this.persist(response)));
+  }
+
+  linkGoogle(credential: string) {
+    return this.http.post<ConnectedIdentity>(`${environment.apiUrl}/auth/google/link`, {
+      credential,
+    });
+  }
+
+  connectedIdentities() {
+    return this.http.get<ConnectedIdentity[]>(`${environment.apiUrl}/auth/identities`);
   }
 
   token(): string | null {

@@ -19,3 +19,13 @@ export interface LoginRequest {
 export interface RegisterRequest extends LoginRequest {
   name: string;
 }
+
+export interface GoogleAuthConfig {
+  enabled: boolean;
+  clientId?: string;
+}
+
+export interface ConnectedIdentity {
+  provider: 'GOOGLE';
+  connectedAt: string;
+}

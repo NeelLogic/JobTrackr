@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
+import { GoogleIdentityService } from '../../core/google-identity.service';
 import { AuthService } from '../../core/auth.service';
 import { AuthResponse, RegisterRequest } from '../../models/auth.models';
 import { Register } from './register';
@@ -17,10 +18,18 @@ describe('Register', () => {
   function setup() {
     const auth = {
       register: vi.fn<(request: RegisterRequest) => ReturnType<AuthService['register']>>(),
+      loginWithGoogle: vi.fn<(credential: string) => ReturnType<AuthService['loginWithGoogle']>>(),
+    };
+    const googleIdentity = {
+      renderButton: vi.fn().mockResolvedValue(false),
     };
     TestBed.configureTestingModule({
       imports: [Register],
-      providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: auth },
+        { provide: GoogleIdentityService, useValue: googleIdentity },
+      ],
     });
     const router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
@@ -80,5 +89,15 @@ describe('Register', () => {
 
     expect(component.error()).toBe('Unable to create your account.');
     expect(component.loading()).toBe(false);
+  });
+
+  it('creates an account with a Google credential', () => {
+    const { auth, component, router } = setup();
+    auth.loginWithGoogle.mockReturnValue(of(response));
+
+    component.signUpWithGoogle('google-credential');
+
+    expect(auth.loginWithGoogle).toHaveBeenCalledWith('google-credential');
+    expect(router.navigate).toHaveBeenCalledWith(['/dashboard']);
   });
 });

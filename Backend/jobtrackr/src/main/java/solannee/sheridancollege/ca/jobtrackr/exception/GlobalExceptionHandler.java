@@ -37,6 +37,14 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.BAD_REQUEST, "Request violates a data constraint", request, null);
     }
 
+    @ExceptionHandler(GoogleAuthenticationException.class)
+    ResponseEntity<ApiError> googleAuthentication(
+            GoogleAuthenticationException exception,
+            HttpServletRequest request
+    ) {
+        return error(HttpStatus.UNAUTHORIZED, exception.getMessage(), request, null);
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     ResponseEntity<ApiError> authentication(AuthenticationException exception, HttpServletRequest request) {
         return error(HttpStatus.UNAUTHORIZED, "Invalid email or password", request, null);
