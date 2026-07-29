@@ -1,0 +1,327 @@
+<main id="main-content" class="page import-page" tabindex="-1">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Inbox assistant</p>
+      <h1>Gmail application import</h1>
+      <p>Scan recent application emails, review every suggestion, then choose what to add.</p>
+    </div>
+    @if (connection()?.connected) {
+      <button class="button button--primary" type="button" [disabled]="scanning()" (click)="scan()">
+        @if (scanning()) {
+          <span class="spinner spinner--button" aria-hidden="true"></span>
+          Scanning Gmail...
+        } @else {
+          Scan Gmail
+        }
+      </button>
+    }
+  </header>
+
+  <section class="privacy-note" aria-label="Gmail import privacy">
+    <span aria-hidden="true">&#128274;</span>
+    <p>
+      <strong>Private by design.</strong> JobTrackr uses read-only access, never stores email
+      bodies, and never creates an application until you approve it.
+    </p>
+  </section>
+
+  @if (error()) {
+    <div class="alert alert--error" role="alert">
+      {{ error() }}
+      @if (statusLoading() === false && connection() === null) {
+        <button class="alert-link" type="button" (click)="retry()">Try again</button>
+      }
+    </div>
+  }
+  @if (success()) {
+    <div class="alert alert--success" role="status">
+      {{ success() }}
+      @if (importedApplicationId(); as applicationId) {
+        <a [routerLink]="['/applications', applicationId]">View application</a>
+      }
+    </div>
+  }
+
+  @if (statusLoading()) {
+    <section class="card loading-state" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      Checking Gmail connection...
+    </section>
+  } @else if (connection(); as gmailConnection) {
+    @if (!gmailConnection.connected) {
+      <section class="card message-state">
+        <div class="state-icon" aria-hidden="true">&#9993;</div>
+        <h2>Connect Gmail to begin</h2>
+        <p>
+          Grant read-only access from Settings, then return here to scan for application emails.
+        </p>
+        <a class="button button--primary" routerLink="/settings">Open Settings</a>
+      </section>
+    } @else if (candidatesLoading()) {
+      <section class="card loading-state" role="status">
+        <span class="spinner" aria-hidden="true"></span>
+        Loading suggestions...
+      </section>
+    } @else {
+      <div class="import-summary">
+        <div>
+          <span class="gmail-mark" aria-hidden="true">M</span>
+          <div>
+            <strong>{{ gmailConnection.email }}</strong>
+            <span>
+              @if (gmailConnection.lastSyncAt) {
+                Last scanned {{ gmailConnection.lastSyncAt | date: 'medium' }}
+              } @else {
+                Ready for the first scan
+              }
+            </span>
+          </div>
+        </div>
+        <strong>{{ candidates().length }} pending</strong>
+      </div>
+
+      @if (candidates().length === 0) {
+        <section class="card empty-state">
+          <div class="empty-icon" aria-hidden="true">&#10003;</div>
+          <h2>Your review queue is clear</h2>
+          <p>Run a Gmail scan to look for recent submissions and application updates.</p>
+          <button
+            class="button button--secondary"
+            type="button"
+            [disabled]="scanning()"
+            (click)="scan()"
+          >
+            Scan Gmail
+          </button>
+        </section>
+      } @else {
+        <section class="candidate-list" aria-labelledby="candidate-list-heading">
+          <div class="list-heading">
+            <div>
+              <p class="eyebrow">Review queue</p>
+              <h2 id="candidate-list-heading">Detected applications</h2>
+            </div>
+            <span>Nothing is imported automatically</span>
+          </div>
+
+          @for (candidate of candidates(); track candidate.id) {
+            <article
+              class="candidate-card card"
+              [class.candidate-card--selected]="selectedId() === candidate.id"
+            >
+              <div class="candidate-card__main">
+                <div class="candidate-card__heading">
+                  <div>
+                    <div class="candidate-badges">
+                      <span class="provider-badge">{{ enumLabel(candidate.provider) }}</span>
+                      <span
+                        class="confidence-badge confidence-badge--{{
+                          candidate.confidence.toLowerCase()
+                        }}"
+                      >
+                        {{ enumLabel(candidate.confidence) }} confidence
+                      </span>
+                      <span class="status-badge status-badge--{{ candidate.status.toLowerCase() }}">
+                        {{ enumLabel(candidate.status) }}
+                      </span>
+                    </div>
+                    <h3>{{ candidate.jobTitle }}</h3>
+                    <p>
+                      {{ candidate.company }}
+                      @if (candidate.location) {
+                        · {{ candidate.location }}
+                      }
+                    </p>
+                  </div>
+                  <time [attr.datetime]="candidate.receivedAt">
+                    {{ candidate.receivedAt | date: 'mediumDate' }}
+                  </time>
+                </div>
+
+                <details>
+                  <summary>Email evidence</summary>
+                  <dl>
+                    <div>
+                      <dt>Subject</dt>
+                      <dd>{{ candidate.sourceSubject }}</dd>
+                    </div>
+                    <div>
+                      <dt>From</dt>
+                      <dd>{{ candidate.sourceSender }}</dd>
+                    </div>
+                  </dl>
+                </details>
+
+                <div class="candidate-actions">
+                  <button
+                    class="button button--primary"
+                    type="button"
+                    (click)="selectCandidate(candidate)"
+                  >
+                    Review and import
+                  </button>
+                  @if (dismissConfirmationId() === candidate.id) {
+                    <span class="dismiss-confirmation">Dismiss permanently?</span>
+                    <button
+                      class="button button--danger"
+                      type="button"
+                      [disabled]="dismissingId() !== null"
+                      (click)="dismiss(candidate.id)"
+                    >
+                      {{ dismissingId() === candidate.id ? 'Dismissing...' : 'Yes, dismiss' }}
+                    </button>
+                    <button
+                      class="button button--secondary"
+                      type="button"
+                      [disabled]="dismissingId() !== null"
+                      (click)="cancelDismiss()"
+                    >
+                      Cancel
+                    </button>
+                  } @else {
+                    <button
+                      class="button button--secondary"
+                      type="button"
+                      (click)="requestDismiss(candidate.id)"
+                    >
+                      Dismiss
+                    </button>
+                  }
+                </div>
+              </div>
+
+              @if (selectedId() === candidate.id) {
+                <form
+                  class="review-form"
+                  [formGroup]="form"
+                  [attr.aria-busy]="importing()"
+                  (ngSubmit)="importSelected()"
+                  novalidate
+                >
+                  <div class="review-form__heading">
+                    <div>
+                      <p class="eyebrow">Your approval</p>
+                      <h3>Review application details</h3>
+                      <p>Correct anything the email did not identify accurately.</p>
+                    </div>
+                    <button
+                      class="icon-button"
+                      type="button"
+                      aria-label="Close review form"
+                      (click)="cancelReview()"
+                    >
+                      &times;
+                    </button>
+                  </div>
+
+                  <div class="form-grid">
+                    <label class="field">
+                      <span>Company <b aria-hidden="true">*</b></span>
+                      <input
+                        type="text"
+                        formControlName="company"
+                        autocomplete="organization"
+                        [attr.aria-invalid]="fieldError('company') ? 'true' : null"
+                      />
+                      @if (fieldError('company'); as fieldMessage) {
+                        <small class="field-error" role="alert">{{ fieldMessage }}</small>
+                      }
+                    </label>
+                    <label class="field">
+                      <span>Job title <b aria-hidden="true">*</b></span>
+                      <input
+                        type="text"
+                        formControlName="jobTitle"
+                        autocomplete="organization-title"
+                        [attr.aria-invalid]="fieldError('jobTitle') ? 'true' : null"
+                      />
+                      @if (fieldError('jobTitle'); as fieldMessage) {
+                        <small class="field-error" role="alert">{{ fieldMessage }}</small>
+                      }
+                    </label>
+                    <label class="field">
+                      <span>Location</span>
+                      <input type="text" formControlName="location" autocomplete="address-level2" />
+                      @if (fieldError('location'); as fieldMessage) {
+                        <small class="field-error" role="alert">{{ fieldMessage }}</small>
+                      }
+                    </label>
+                    <label class="field">
+                      <span>Job URL</span>
+                      <input type="url" formControlName="jobUrl" placeholder="https://..." />
+                      @if (fieldError('jobUrl'); as fieldMessage) {
+                        <small class="field-error" role="alert">{{ fieldMessage }}</small>
+                      }
+                    </label>
+                    <label class="field">
+                      <span>Application date <b aria-hidden="true">*</b></span>
+                      <input
+                        type="date"
+                        formControlName="applicationDate"
+                        [max]="maxApplicationDate"
+                      />
+                      @if (fieldError('applicationDate'); as fieldMessage) {
+                        <small class="field-error" role="alert">{{ fieldMessage }}</small>
+                      }
+                    </label>
+                    <label class="field">
+                      <span>Status <b aria-hidden="true">*</b></span>
+                      <select formControlName="status">
+                        @for (status of statuses; track status) {
+                          <option [value]="status">{{ enumLabel(status) }}</option>
+                        }
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>Employment type <b aria-hidden="true">*</b></span>
+                      <select formControlName="employmentType">
+                        @for (employmentType of employmentTypes; track employmentType) {
+                          <option [value]="employmentType">{{ enumLabel(employmentType) }}</option>
+                        }
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>Follow-up date</span>
+                      <input type="date" formControlName="followUpDate" />
+                    </label>
+                    <label class="field field--wide">
+                      <span>Notes</span>
+                      <textarea
+                        formControlName="notes"
+                        rows="4"
+                        placeholder="Add context or next steps..."
+                      ></textarea>
+                      @if (fieldError('notes'); as fieldMessage) {
+                        <small class="field-error" role="alert">{{ fieldMessage }}</small>
+                      }
+                    </label>
+                  </div>
+
+                  @if (form.hasError('applicationDateRequired') && submitted()) {
+                    <p class="business-error" role="alert">
+                      Application date is required for this status.
+                    </p>
+                  }
+
+                  <div class="review-actions">
+                    <button
+                      class="button button--secondary"
+                      type="button"
+                      [disabled]="importing()"
+                      (click)="cancelReview()"
+                    >
+                      Cancel
+                    </button>
+                    <button class="button button--primary" type="submit" [disabled]="importing()">
+                      {{ importing() ? 'Importing...' : 'Approve and import' }}
+                    </button>
+                  </div>
+                </form>
+              }
+            </article>
+          }
+        </section>
+      }
+    }
+  }
+</main>

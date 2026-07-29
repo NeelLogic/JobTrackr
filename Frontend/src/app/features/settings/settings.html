@@ -88,14 +88,17 @@
               <span>Connected with read-only Gmail access</span>
             </div>
           </div>
-          <button
-            class="button button--secondary"
-            type="button"
-            [disabled]="gmailDisconnecting()"
-            (click)="requestGmailDisconnect()"
-          >
-            Disconnect
-          </button>
+          <div class="gmail-actions">
+            <a class="button button--primary" routerLink="/imports">Review Gmail imports</a>
+            <button
+              class="button button--secondary"
+              type="button"
+              [disabled]="gmailDisconnecting()"
+              (click)="requestGmailDisconnect()"
+            >
+              Disconnect
+            </button>
+          </div>
         </div>
 
         @if (confirmGmailDisconnect()) {
@@ -135,7 +138,7 @@
           <div>
             <strong>Connect {{ user()?.email }}</strong>
             @if (gmailConnection.configured) {
-              <span>Grant read-only access now; email import arrives in Phase 9.</span>
+              <span>Grant read-only access to scan for application updates.</span>
             } @else {
               <span>Gmail integration is not configured in this environment.</span>
             }

@@ -122,6 +122,13 @@
   gap: 10px;
 }
 
+.gmail-actions {
+  display: flex !important;
+  flex: 0 0 auto;
+  grid-auto-flow: column;
+  gap: 10px !important;
+}
+
 .button--danger {
   color: #fff;
   background: var(--danger);
@@ -142,7 +149,8 @@
   }
 
   .disconnect-confirmation,
-  .disconnect-actions {
+  .disconnect-actions,
+  .gmail-actions {
     align-items: stretch;
     flex-direction: column;
   }

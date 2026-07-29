@@ -3,7 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { GmailAuthorizationResponse, GmailConnectionStatus } from '../../models/integration.models';
+import { ApplicationRequest } from '../../models/application.models';
+import {
+  GmailAuthorizationResponse,
+  GmailConnectionStatus,
+  GmailImportCandidate,
+  GmailImportedApplication,
+  GmailImportScanResponse,
+} from '../../models/integration.models';
 
 @Injectable({ providedIn: 'root' })
 export class GmailIntegrationService {
@@ -21,6 +28,28 @@ export class GmailIntegrationService {
 
   disconnect(): Observable<void> {
     return this.http.delete<void>(this.endpoint);
+  }
+
+  scan(): Observable<GmailImportScanResponse> {
+    return this.http.post<GmailImportScanResponse>(`${this.endpoint}/scan`, null);
+  }
+
+  candidates(): Observable<GmailImportCandidate[]> {
+    return this.http.get<GmailImportCandidate[]>(`${this.endpoint}/candidates`);
+  }
+
+  importCandidate(
+    candidateId: number,
+    request: ApplicationRequest,
+  ): Observable<GmailImportedApplication> {
+    return this.http.post<GmailImportedApplication>(
+      `${this.endpoint}/candidates/${candidateId}/import`,
+      request,
+    );
+  }
+
+  dismissCandidate(candidateId: number): Observable<void> {
+    return this.http.delete<void>(`${this.endpoint}/candidates/${candidateId}`);
   }
 
   redirectToAuthorization(authorizationUrl: string): void {

@@ -52,4 +52,14 @@ describe('Shell', () => {
     expect(auth.logout).toHaveBeenCalledOnce();
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
   });
+
+  it('includes the Gmail import workflow in primary navigation', () => {
+    const { fixture } = setup();
+    const importLink = fixture.nativeElement.querySelector(
+      'a[href="/imports"]',
+    ) as HTMLAnchorElement;
+
+    expect(importLink).toBeTruthy();
+    expect(importLink.textContent).toContain('Gmail import');
+  });
 });
