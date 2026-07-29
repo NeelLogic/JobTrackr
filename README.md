@@ -232,7 +232,7 @@ npm run build
 
 Current Phase 9 baseline:
 
-- 46 backend tests covering password and Google authentication, Gmail token encryption, single-use OAuth callbacks, email parsing, deduplication, reviewed imports, authorization, validation, user data isolation, services, JWT behavior, and API integration
+- 47 backend tests covering password and Google authentication, Gmail token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, authorization, validation, user data isolation, services, JWT behavior, and API integration
 - 65 frontend tests covering API services, route guards, password and Google authentication, Gmail connection settings, Gmail scanning and review, dashboard, application workflows, and navigation
 
 ## Continuous Integration
