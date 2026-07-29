@@ -116,8 +116,7 @@ export class Settings implements OnInit {
           );
           this.success.set('Gmail disconnected and stored access was removed.');
         },
-        error: (error) =>
-          this.error.set(apiErrorMessage(error, 'Unable to disconnect Gmail.')),
+        error: (error) => this.error.set(apiErrorMessage(error, 'Unable to disconnect Gmail.')),
       });
   }
 

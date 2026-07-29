@@ -3,10 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import {
-  GmailAuthorizationResponse,
-  GmailConnectionStatus,
-} from '../../models/integration.models';
+import { GmailAuthorizationResponse, GmailConnectionStatus } from '../../models/integration.models';
 
 @Injectable({ providedIn: 'root' })
 export class GmailIntegrationService {
