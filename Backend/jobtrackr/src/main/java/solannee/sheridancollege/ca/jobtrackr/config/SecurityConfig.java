@@ -67,6 +67,7 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/google",
                                 "/api/auth/google/config",
+                                "/api/integrations/gmail/callback",
                                 "/api/health"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
