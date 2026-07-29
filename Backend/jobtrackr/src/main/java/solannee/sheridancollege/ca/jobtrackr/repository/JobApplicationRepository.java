@@ -21,4 +21,6 @@ public interface JobApplicationRepository
     long countByUserIdAndApplicationDateBetween(Long userId, LocalDate from, LocalDate to);
 
     List<JobApplication> findTop5ByUserIdOrderByUpdatedAtDesc(Long userId);
+
+    List<JobApplication> findAllByUserId(Long userId);
 }

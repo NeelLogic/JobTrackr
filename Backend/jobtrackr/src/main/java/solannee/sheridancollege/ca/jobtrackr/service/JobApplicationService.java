@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import solannee.sheridancollege.ca.jobtrackr.dto.application.ApplicationRequest;
 import solannee.sheridancollege.ca.jobtrackr.dto.application.ApplicationResponse;
 import solannee.sheridancollege.ca.jobtrackr.dto.application.PageResponse;
-import solannee.sheridancollege.ca.jobtrackr.dto.dashboard.DashboardResponse;
 import solannee.sheridancollege.ca.jobtrackr.exception.InvalidRequestException;
 import solannee.sheridancollege.ca.jobtrackr.exception.ResourceNotFoundException;
 import solannee.sheridancollege.ca.jobtrackr.mapper.ApplicationMapper;
@@ -26,10 +25,7 @@ import solannee.sheridancollege.ca.jobtrackr.repository.JobApplicationRepository
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -102,34 +98,6 @@ public class JobApplicationService {
     @Transactional
     public void delete(User user, Long id) {
         applicationRepository.delete(findOwnedApplication(user.getId(), id));
-    }
-
-    @Transactional(readOnly = true)
-    public DashboardResponse dashboard(User user) {
-        Long userId = user.getId();
-        LocalDate today = LocalDate.now();
-        LocalDate monthStart = today.withDayOfMonth(1);
-        LocalDate monthEnd = today.withDayOfMonth(today.lengthOfMonth());
-
-        Map<ApplicationStatus, Long> counts = new EnumMap<>(ApplicationStatus.class);
-        for (ApplicationStatus status : ApplicationStatus.values()) {
-            counts.put(status, applicationRepository.countByUserIdAndStatus(userId, status));
-        }
-
-        List<ApplicationResponse> recent = applicationRepository.findTop5ByUserIdOrderByUpdatedAtDesc(userId)
-                .stream()
-                .map(applicationMapper::toResponse)
-                .toList();
-
-        return new DashboardResponse(
-                applicationRepository.countByUserId(userId),
-                applicationRepository.countByUserIdAndApplicationDateBetween(userId, monthStart, monthEnd),
-                counts.get(ApplicationStatus.INTERVIEW),
-                counts.get(ApplicationStatus.OFFER),
-                counts.get(ApplicationStatus.REJECTED),
-                Collections.unmodifiableMap(counts),
-                recent
-        );
     }
 
     private JobApplication findOwnedApplication(Long userId, Long applicationId) {
