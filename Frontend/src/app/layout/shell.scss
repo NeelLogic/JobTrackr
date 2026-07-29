@@ -17,17 +17,37 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 8px 40px;
+  margin: 0 8px 24px;
+}
+.sidebar__add {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 18px;
+  border-radius: 9px;
+  color: #fff;
+  background: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 750;
+  text-decoration: none;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+}
+.sidebar__add:hover {
+  background: var(--primary-dark);
 }
 .sidebar nav {
   display: grid;
-  gap: 8px;
+  gap: 4px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 .sidebar nav a {
   display: flex;
   align-items: center;
   gap: 13px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-radius: 10px;
   color: #aeb8ca;
   font-weight: 600;
@@ -39,17 +59,41 @@
   color: white;
   background: rgba(255, 255, 255, 0.09);
 }
+.nav-section {
+  margin: 17px 12px 5px;
+  color: #64748b;
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.nav-section:first-child {
+  margin-top: 0;
+}
 .nav-icon {
   width: 22px;
   font-size: 20px;
   text-align: center;
+}
+.nav-badge {
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 999px;
+  color: #fecaca;
+  background: rgba(220, 38, 38, 0.22);
+  font-size: 0.65rem;
+  font-weight: 800;
 }
 .sidebar__profile {
   display: grid;
   grid-template-columns: 38px 1fr auto;
   align-items: center;
   gap: 10px;
-  margin-top: auto;
+  margin-top: 18px;
   padding: 15px 10px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
