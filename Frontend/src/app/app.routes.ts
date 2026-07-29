@@ -58,6 +58,12 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'imports',
+        title: 'Gmail import | JobTrackr',
+        loadComponent: () =>
+          import('./features/imports/gmail-import').then((module) => module.GmailImport),
+      },
+      {
         path: 'settings',
         title: 'Account settings | JobTrackr',
         loadComponent: () =>

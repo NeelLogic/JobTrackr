@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { GmailIntegrationService } from '../../core/api/gmail-integration.service';
 import { apiErrorMessage } from '../../core/api-error';
@@ -10,7 +10,7 @@ import { GoogleSignInButton } from '../../shared/google-sign-in-button';
 
 @Component({
   selector: 'app-settings',
-  imports: [GoogleSignInButton],
+  imports: [GoogleSignInButton, RouterLink],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })
@@ -150,7 +150,7 @@ export class Settings implements OnInit {
       return;
     }
     if (result === 'connected') {
-      this.success.set('Gmail connected securely. Email import will be available in Phase 9.');
+      this.success.set('Gmail connected securely. You can now scan for application emails.');
     } else if (result === 'denied') {
       this.error.set('Gmail permission was not granted. Your account was not connected.');
     } else {

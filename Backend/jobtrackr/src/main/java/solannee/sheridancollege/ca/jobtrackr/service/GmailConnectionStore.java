@@ -118,6 +118,13 @@ public class GmailConnectionStore {
         return Optional.of(snapshot);
     }
 
+    @Transactional
+    public void markSynced(Long userId, Instant syncedAt) {
+        GmailConnection connection = connections.findByUserId(userId)
+                .orElseThrow(() -> new InvalidRequestException("Gmail is not connected"));
+        connection.setLastSyncAt(syncedAt);
+    }
+
     public record GmailTokenSnapshot(
             String accessToken,
             String refreshToken,

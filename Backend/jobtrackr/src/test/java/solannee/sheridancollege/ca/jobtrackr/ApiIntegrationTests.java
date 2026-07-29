@@ -12,14 +12,22 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.util.UriComponentsBuilder;
 import solannee.sheridancollege.ca.jobtrackr.integration.gmail.GmailOAuthClient;
+import solannee.sheridancollege.ca.jobtrackr.integration.gmail.GmailMailboxClient;
+import solannee.sheridancollege.ca.jobtrackr.integration.gmail.GmailMessage;
 import solannee.sheridancollege.ca.jobtrackr.integration.gmail.GoogleGmailProfile;
 import solannee.sheridancollege.ca.jobtrackr.integration.gmail.GoogleOAuthTokens;
 import solannee.sheridancollege.ca.jobtrackr.repository.GmailConnectionRepository;
+import solannee.sheridancollege.ca.jobtrackr.repository.GmailImportCandidateRepository;
 import solannee.sheridancollege.ca.jobtrackr.security.GoogleIdentityVerifier;
 import solannee.sheridancollege.ca.jobtrackr.security.VerifiedGoogleIdentity;
 import solannee.sheridancollege.ca.jobtrackr.service.GmailIntegrationService;
 
+import java.time.Instant;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -48,8 +56,14 @@ class ApiIntegrationTests {
     @MockitoBean
     GmailOAuthClient gmailOAuthClient;
 
+    @MockitoBean
+    GmailMailboxClient gmailMailboxClient;
+
     @Autowired
     GmailConnectionRepository gmailConnections;
+
+    @Autowired
+    GmailImportCandidateRepository gmailImportCandidates;
 
     private static int sequence;
 
@@ -115,6 +129,37 @@ class ApiIntegrationTests {
                 .build()
                 .getQueryParams()
                 .getFirst("state");
+    }
+
+    private void connectGmail(String token, String email, String tokenPrefix) throws Exception {
+        String state = beginGmailConnection(token);
+        when(gmailOAuthClient.exchangeAuthorizationCode(tokenPrefix + "-code")).thenReturn(
+                new GoogleOAuthTokens(
+                        tokenPrefix + "-access",
+                        tokenPrefix + "-refresh",
+                        3600,
+                        GmailIntegrationService.GMAIL_READONLY_SCOPE
+                ));
+        when(gmailOAuthClient.getProfile(tokenPrefix + "-access"))
+                .thenReturn(new GoogleGmailProfile(email));
+        mvc.perform(get("/api/integrations/gmail/callback")
+                        .param("code", tokenPrefix + "-code")
+                        .param("state", state))
+                .andExpect(status().isFound());
+    }
+
+    private GmailMessage workdayMessage(String id, String company) {
+        return new GmailMessage(
+                id,
+                "Application submitted to " + company,
+                company + " Recruiting <notifications@myworkday.com>",
+                Instant.parse("2026-07-20T14:30:00Z"),
+                """
+                        You successfully submitted an application for Software Developer at %s.
+                        Location: Toronto, ON
+                        https://%s.wd5.myworkdayjobs.com/jobs/job/Software-Developer_R123
+                        """.formatted(company, company.toLowerCase().replace(" ", ""))
+        );
     }
 
     @Test
@@ -248,8 +293,19 @@ class ApiIntegrationTests {
                 .andExpect(status().isUnauthorized());
         mvc.perform(delete("/api/integrations/gmail"))
                 .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/integrations/gmail/scan"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/integrations/gmail/candidates"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/integrations/gmail/candidates/1/import")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(delete("/api/integrations/gmail/candidates/1"))
+                .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(gmailOAuthClient);
+        verifyNoInteractions(gmailMailboxClient);
     }
 
     @Test
@@ -392,6 +448,168 @@ class ApiIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.connected").value(false));
         verify(gmailOAuthClient).revoke("disconnect-refresh");
+    }
+
+    @Test
+    void gmailScanDetectsCandidatesUpdatesSyncAndDeduplicatesMessages() throws Exception {
+        String email = "gmail-scan" + (++sequence) + "@example.com";
+        String token = registerEmail(email);
+        String tokenPrefix = "scan-" + sequence;
+        connectGmail(token, email, tokenPrefix);
+        GmailMessage application = workdayMessage("private-gmail-message-" + sequence, "Maple Labs");
+        GmailMessage unrelated = new GmailMessage(
+                "newsletter-" + sequence,
+                "Weekly engineering newsletter",
+                "News <news@example.com>",
+                Instant.parse("2026-07-21T12:00:00Z"),
+                "A web application architecture article"
+        );
+        when(gmailMailboxClient.listMessages(
+                eq(tokenPrefix + "-access"), anyString(), eq(100)))
+                .thenReturn(List.of(application, unrelated));
+
+        String firstScan = mvc.perform(post("/api/integrations/gmail/scan")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.messagesScanned").value(2))
+                .andExpect(jsonPath("$.matchesDetected").value(1))
+                .andExpect(jsonPath("$.candidatesAdded").value(1))
+                .andExpect(jsonPath("$.duplicatesSkipped").value(0))
+                .andExpect(jsonPath("$.candidates.length()").value(1))
+                .andExpect(jsonPath("$.candidates[0].provider").value("WORKDAY"))
+                .andExpect(jsonPath("$.candidates[0].company").value("Maple Labs"))
+                .andExpect(jsonPath("$.candidates[0].jobTitle").value("Software Developer"))
+                .andReturn().getResponse().getContentAsString();
+
+        long candidateId = json.readTree(firstScan).get("candidates").get(0).get("id").asLong();
+        var stored = gmailImportCandidates.findById(candidateId).orElseThrow();
+        assertThat(stored.getMessageIdHash())
+                .hasSize(64)
+                .doesNotContain(application.id());
+        assertThat(gmailConnections.findAll().stream()
+                .filter(connection -> connection.getGoogleEmail().equals(email))
+                .findFirst().orElseThrow().getLastSyncAt()).isNotNull();
+
+        mvc.perform(post("/api/integrations/gmail/scan")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.candidatesAdded").value(0))
+                .andExpect(jsonPath("$.duplicatesSkipped").value(1))
+                .andExpect(jsonPath("$.candidates.length()").value(1));
+    }
+
+    @Test
+    void userReviewsAndExplicitlyImportsAGmailCandidateOnlyOnce() throws Exception {
+        String email = "gmail-import" + (++sequence) + "@example.com";
+        String token = registerEmail(email);
+        String tokenPrefix = "import-" + sequence;
+        connectGmail(token, email, tokenPrefix);
+        when(gmailMailboxClient.listMessages(
+                eq(tokenPrefix + "-access"), anyString(), eq(100)))
+                .thenReturn(List.of(workdayMessage("import-message-" + sequence, "Northstar")));
+
+        String scan = mvc.perform(post("/api/integrations/gmail/scan")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long candidateId = json.readTree(scan).get("candidates").get(0).get("id").asLong();
+
+        mvc.perform(post("/api/integrations/gmail/candidates/" + candidateId + "/import")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "company":"",
+                                  "jobTitle":"Software Developer",
+                                  "applicationDate":"2026-07-20",
+                                  "status":"APPLIED",
+                                  "employmentType":"FULL_TIME"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.company").exists());
+
+        String reviewed = """
+                {
+                  "company":"Northstar Technologies",
+                  "jobTitle":"Junior Software Developer",
+                  "location":"Toronto, ON",
+                  "jobUrl":"https://northstar.example/jobs/123",
+                  "applicationDate":"2026-07-20",
+                  "status":"APPLIED",
+                  "employmentType":"FULL_TIME",
+                  "notes":"Imported after reviewing the Gmail suggestion."
+                }
+                """;
+        mvc.perform(post("/api/integrations/gmail/candidates/" + candidateId + "/import")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reviewed))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.company").value("Northstar Technologies"))
+                .andExpect(jsonPath("$.jobTitle").value("Junior Software Developer"));
+
+        mvc.perform(get("/api/integrations/gmail/candidates")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/api/applications")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].company")
+                        .value("Northstar Technologies"));
+        mvc.perform(post("/api/integrations/gmail/candidates/" + candidateId + "/import")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reviewed))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void usersCannotSeeImportOrDismissAnotherUsersGmailCandidates() throws Exception {
+        String email = "gmail-private" + (++sequence) + "@example.com";
+        String owner = registerEmail(email);
+        String attacker = register("gmail-candidate-attacker");
+        String tokenPrefix = "private-" + sequence;
+        connectGmail(owner, email, tokenPrefix);
+        when(gmailMailboxClient.listMessages(
+                eq(tokenPrefix + "-access"), anyString(), eq(100)))
+                .thenReturn(List.of(workdayMessage("private-message-" + sequence, "Private Co")));
+
+        String scan = mvc.perform(post("/api/integrations/gmail/scan")
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long candidateId = json.readTree(scan).get("candidates").get(0).get("id").asLong();
+
+        mvc.perform(get("/api/integrations/gmail/candidates")
+                        .header("Authorization", "Bearer " + attacker))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(post("/api/integrations/gmail/candidates/" + candidateId + "/import")
+                        .header("Authorization", "Bearer " + attacker)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "company":"Stolen",
+                                  "jobTitle":"Developer",
+                                  "applicationDate":"2026-07-20",
+                                  "status":"APPLIED",
+                                  "employmentType":"FULL_TIME"
+                                }
+                                """))
+                .andExpect(status().isNotFound());
+        mvc.perform(delete("/api/integrations/gmail/candidates/" + candidateId)
+                        .header("Authorization", "Bearer " + attacker))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(delete("/api/integrations/gmail/candidates/" + candidateId)
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isNoContent());
+        mvc.perform(delete("/api/integrations/gmail/candidates/" + candidateId)
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isConflict());
     }
 
     @Test

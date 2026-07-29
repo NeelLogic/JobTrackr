@@ -4,7 +4,7 @@
 
 JobTrackr is a full-stack job application tracker for students and new graduates. It provides a secure, user-specific workspace for organizing opportunities, following application progress, and understanding job-search activity.
 
-> **Project status:** Phase 8 is complete. JobTrackr supports local credentials, Google Sign-In, secure Google account linking, and a user-scoped Gmail OAuth connection. Email detection and review-before-import are next in Phase 9; Docker and Render deployment remain part of the Phase 12 release work.
+> **Project status:** Phase 9 is complete. JobTrackr supports local credentials, Google Sign-In, secure Google account linking, and a user-scoped Gmail import workflow with Workday detection, review-before-save, and duplicate protection. Advanced analytics is next in Phase 10; Docker and Render deployment remain part of the Phase 12 release work.
 
 ## Features
 
@@ -12,6 +12,9 @@ JobTrackr is a full-stack job application tracker for students and new graduates
 - Google Sign-In for new or previously linked accounts
 - Protected account settings for safely linking an existing password account to Google
 - Gmail OAuth connection management with read-only permission, encrypted token storage, and disconnect controls
+- On-demand Gmail scanning for Workday and common application confirmation or status emails
+- A private review queue where detected fields can be corrected before an application is created
+- User-bound message fingerprints that prevent repeat imports without storing raw Gmail message IDs or bodies
 - Protected Angular routes and authenticated API requests
 - User-specific data isolation at the repository and service layers
 - Complete job application create, read, update, and delete workflows
@@ -47,12 +50,13 @@ flowchart LR
     SEC --> CTRL["Controllers"]
     CTRL --> SVC["Services and validation"]
     SVC -->|"OAuth code exchange / revoke"| GOAUTH["Google OAuth"]
+    SVC -->|"Bounded read-only scan"| GMAIL["Gmail API"]
     SVC --> REPO["Spring Data repositories"]
-    REPO --> DB[("MySQL: user data + encrypted Gmail tokens")]
+    REPO --> DB[("MySQL: user data + encrypted Gmail tokens + review metadata")]
     FLY["Flyway migrations"] --> DB
 ```
 
-The backend uses a controller-service-repository structure with DTOs, entity mapping, validation, and centralized exception handling. All application queries are scoped to the authenticated user, including individual record lookups, updates, and deletion.
+The backend uses a controller-service-repository structure with DTOs, entity mapping, validation, and centralized exception handling. All application and Gmail-candidate queries are scoped to the authenticated user, including individual record lookups, imports, updates, dismissal, and deletion.
 
 ## Repository Structure
 
@@ -78,6 +82,10 @@ JobTrackr/
 | `POST`   | `/api/integrations/gmail/connect` | Start Gmail OAuth with a one-time state         |
 | `GET`    | `/api/integrations/gmail/callback` | Complete Google's OAuth redirect                |
 | `DELETE` | `/api/integrations/gmail`   | Disconnect Gmail and remove stored credentials      |
+| `POST`   | `/api/integrations/gmail/scan` | Scan a bounded recent Gmail window on demand      |
+| `GET`    | `/api/integrations/gmail/candidates` | List the current user's pending suggestions |
+| `POST`   | `/api/integrations/gmail/candidates/{id}/import` | Import reviewed application data |
+| `DELETE` | `/api/integrations/gmail/candidates/{id}` | Dismiss an owned suggestion permanently    |
 | `GET`    | `/api/applications`         | Search, filter, sort, and paginate applications     |
 | `POST`   | `/api/applications`         | Create an application                               |
 | `GET`    | `/api/applications/{id}`    | View an owned application                           |
@@ -86,7 +94,7 @@ JobTrackr/
 | `GET`    | `/api/dashboard`            | Retrieve user-specific analytics                    |
 | `GET`    | `/api/health`               | Check API health                                    |
 
-Registration, password login, Google login, Google configuration, the one-time Gmail OAuth callback, and health checks are public. Starting or removing a Gmail connection, account linking, connected identities, application data, and dashboard analytics require an `Authorization: Bearer <token>` header.
+Registration, password login, Google login, Google configuration, the one-time Gmail OAuth callback, and health checks are public. Starting or removing a Gmail connection, scanning Gmail, reviewing import candidates, account linking, connected identities, application data, and dashboard analytics require an `Authorization: Bearer <token>` header.
 
 ## Local Development
 
@@ -145,7 +153,7 @@ Phase 7 uses the Google Identity Services callback flow and does not require a r
 
 ### Gmail connection setup
 
-Phase 8 establishes and securely stores Gmail authorization; it does **not** read or import email yet. Phase 9 will add explicit review-before-import.
+Phase 9 uses the Phase 8 authorization to run a bounded, on-demand scan of recent application-related messages. Every detected item stays in a private review queue until the user edits and explicitly approves it. JobTrackr does not store raw Gmail message IDs or message bodies.
 
 1. In the same Google Cloud project, enable the **Gmail API**.
 2. Keep the OAuth audience in **Testing** and add your Google account as a test user.
@@ -161,7 +169,9 @@ Phase 8 establishes and securely stores Gmail authorization; it does **not** rea
 
    ```powershell
    $gmailKeyBytes = New-Object byte[] 32
-   [Security.Cryptography.RandomNumberGenerator]::Fill($gmailKeyBytes)
+   $gmailRng = [Security.Cryptography.RandomNumberGenerator]::Create()
+   $gmailRng.GetBytes($gmailKeyBytes)
+   $gmailRng.Dispose()
    [Convert]::ToBase64String($gmailKeyBytes)
    ```
 
@@ -174,8 +184,11 @@ Phase 8 establishes and securely stores Gmail authorization; it does **not** rea
    ```
 
 8. Restart the backend, sign in to JobTrackr, open **Settings**, and select **Connect Gmail**.
+9. Open **Gmail import**, select **Scan Gmail**, review each suggestion, and explicitly import or dismiss it.
 
 Never put the client secret or encryption key in Angular, Git, screenshots, or documentation. Google OAuth apps left in Testing may issue refresh tokens that expire after seven days, so reconnecting during local development is expected.
+
+The default scan examines at most 100 matching messages from the previous 180 days. Scans are user initiated; no Gmail push notifications, background mailbox monitoring, Workday credentials, or Workday private API are used.
 
 ## Environment Variables
 
@@ -195,6 +208,8 @@ Never put the client secret or encryption key in Angular, Git, screenshots, or d
 | `GOOGLE_GMAIL_REDIRECT_URI`  | No                    | Local backend Gmail callback                 | Must exactly match the Google OAuth client redirect URI       |
 | `GMAIL_FRONTEND_CALLBACK_URL`| No                    | `http://localhost:4200/settings`             | Fixed frontend destination after the OAuth callback           |
 | `GMAIL_OAUTH_STATE_TTL`      | No                    | `10m`                                        | Lifetime of a single-use Gmail OAuth state                    |
+| `GMAIL_IMPORT_LOOKBACK_DAYS` | No                    | `180`                                        | Recent Gmail window; backend limits the value to 1–365 days   |
+| `GMAIL_IMPORT_MAX_MESSAGES`  | No                    | `100`                                        | Maximum messages per scan; backend limits the value to 1–100  |
 
 Never commit real credentials or production secrets. Configure them through local environment variables and, for deployment, the Render environment settings. The Google client ID is public configuration, but it remains environment-specific and is not hard-coded into the Angular application.
 
@@ -215,10 +230,10 @@ npm test -- --watch=false
 npm run build
 ```
 
-Current Phase 8 baseline:
+Current Phase 9 baseline:
 
-- 39 backend tests covering password and Google authentication, Gmail token encryption, single-use OAuth callbacks, authorization, validation, user data isolation, services, JWT behavior, and API integration
-- 57 frontend tests covering API services, route guards, password and Google authentication, Gmail connection settings, dashboard, application workflows, and navigation
+- 46 backend tests covering password and Google authentication, Gmail token encryption, single-use OAuth callbacks, email parsing, deduplication, reviewed imports, authorization, validation, user data isolation, services, JWT behavior, and API integration
+- 65 frontend tests covering API services, route guards, password and Google authentication, Gmail connection settings, Gmail scanning and review, dashboard, application workflows, and navigation
 
 ## Continuous Integration
 
@@ -240,7 +255,10 @@ Merges should only proceed after all required checks pass.
 - Gmail OAuth state values are random, stored only as SHA-256 hashes, expire quickly, and can be consumed only once
 - Gmail access and refresh tokens are encrypted with AES-256-GCM and bound to the owning user before database storage
 - A connected Gmail address must match the authenticated JobTrackr account, and connection data is always queried by user ID
-- Gmail uses the minimum Phase 8 permission (`gmail.readonly`); no email is read until the Phase 9 import workflow is implemented
+- Gmail uses read-only permission (`gmail.readonly`) and scans only when the authenticated user requests it
+- Gmail scans are bounded by age and message count; raw message bodies and raw Gmail message IDs are not stored
+- Import candidates use SHA-256 user-bound message fingerprints for deduplication and are always queried by owner
+- No application is created from Gmail until the owner reviews validated fields and explicitly approves the import
 - The API is stateless and validates signed JWTs on protected endpoints
 - CORS origins are environment-configurable
 - Request DTOs enforce field, date, URL, currency, and salary validation
@@ -262,8 +280,8 @@ For a future production hardening pass, token storage can move from browser loca
 | 6     | Frontend testing, accessibility, responsive polish, and CI gates  | Complete |
 | 7     | Google Sign-In and secure account linking                         | Complete |
 | 8     | Gmail connection and permission management                        | Complete |
-| 9     | Workday-email detection, import review, and deduplication          | Next     |
-| 10    | Advanced company and application analytics                        | Planned  |
+| 9     | Workday-email detection, import review, and deduplication          | Complete |
+| 10    | Advanced company and application analytics                        | Next     |
 | 11    | Gemini-assisted resume and cover-letter workflows                 | Planned  |
 | 12    | Docker, Render deployment, final QA, documentation, and V1 release | Planned  |
 
@@ -278,8 +296,7 @@ Every phase is complete only after:
 
 ## Planned Improvements
 
-- Gmail import with explicit consent, review-before-save, and duplicate protection (Phase 9)
-- Workday application detection from confirmation emails while preserving manual entry
+- Broader provider-specific email detection rules based on real-world opt-in feedback
 - Company-focused analytics and richer dashboard views
 - Gemini-assisted resume and cover-letter generation with user review
 - Dockerfiles, Docker Compose, and cost-conscious Render deployment configuration
