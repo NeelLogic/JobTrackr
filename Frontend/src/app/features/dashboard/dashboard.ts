@@ -17,7 +17,7 @@ import { DashboardSummary } from '../../models/dashboard.models';
 
 interface DashboardStat {
   label: string;
-  value: number;
+  value: string;
   description: string;
   tone: 'blue' | 'violet' | 'amber' | 'green' | 'red';
 }
@@ -51,33 +51,33 @@ export class Dashboard implements OnInit {
     return [
       {
         label: 'Total applications',
-        value: summary.totalApplications,
+        value: String(summary.totalApplications),
         description: 'Across your pipeline',
         tone: 'blue',
       },
       {
-        label: 'This month',
-        value: summary.applicationsThisMonth,
-        description: 'Applications submitted',
+        label: 'Active applications',
+        value: String(summary.activeApplications),
+        description: 'Still moving forward',
         tone: 'violet',
       },
       {
-        label: 'Interviews',
-        value: summary.interviews,
-        description: 'Currently interviewing',
+        label: 'This month',
+        value: String(summary.applicationsThisMonth),
+        description: 'Applications submitted',
         tone: 'amber',
       },
       {
-        label: 'Offers',
-        value: summary.offers,
-        description: 'Offers received',
+        label: 'Response rate',
+        value: `${summary.responseRate}%`,
+        description: 'Applications with a response',
         tone: 'green',
       },
       {
-        label: 'Rejections',
-        value: summary.rejections,
-        description: 'Closed opportunities',
-        tone: 'red',
+        label: 'Offers reached',
+        value: String(summary.offers),
+        description: `${summary.offerRate}% of applied roles`,
+        tone: 'green',
       },
     ];
   });

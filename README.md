@@ -4,7 +4,7 @@
 
 JobTrackr is a full-stack job application tracker for students and new graduates. It provides a secure, user-specific workspace for organizing opportunities, following application progress, and understanding job-search activity.
 
-> **Project status:** Phase 9 is complete. JobTrackr supports local credentials, Google Sign-In, secure Google account linking, and a user-scoped Gmail import workflow with Workday detection, review-before-save, and duplicate protection. Advanced analytics is next in Phase 10; Docker and Render deployment remain part of the Phase 12 release work.
+> **Project status:** Phase 10 is complete. JobTrackr now combines secure authentication, Gmail-assisted application import, status-history tracking, advanced application analytics, company insights, and an actionable follow-up workspace. Gemini-assisted resume and cover-letter workflows are next in Phase 11; Docker and Render deployment remain part of the Phase 12 release work.
 
 ## Features
 
@@ -23,7 +23,13 @@ JobTrackr is a full-stack job application tracker for students and new graduates
 - Search by company, job title, or location
 - Status and employment-type filters
 - Server-side sorting and pagination
-- Dashboard totals, monthly activity, interview/offer/rejection counts, status distribution, and recent applications
+- Dashboard totals, active-pipeline metrics, response and offer rates, follow-up alerts, status distribution, and recent applications
+- Date-range analytics for 30 days, 90 days, six months, or all recorded activity
+- Application trends, stage funnel conversion, status mix, employment-type mix, and top companies
+- Company-level totals, active applications, interviews reached, offers reached, search, and sorting
+- Overdue, due-today, upcoming, and stale application follow-up queues
+- Application status history recorded for every new application and subsequent status transition
+- Sectioned workspace navigation for overview, tracking, integrations, and account management
 - Responsive layouts, keyboard navigation, accessible form errors, and loading, empty, and error states
 
 ## Tech Stack
@@ -52,11 +58,11 @@ flowchart LR
     SVC -->|"OAuth code exchange / revoke"| GOAUTH["Google OAuth"]
     SVC -->|"Bounded read-only scan"| GMAIL["Gmail API"]
     SVC --> REPO["Spring Data repositories"]
-    REPO --> DB[("MySQL: user data + encrypted Gmail tokens + review metadata")]
+    REPO --> DB[("MySQL: user data + status history + encrypted Gmail tokens + review metadata")]
     FLY["Flyway migrations"] --> DB
 ```
 
-The backend uses a controller-service-repository structure with DTOs, entity mapping, validation, and centralized exception handling. All application and Gmail-candidate queries are scoped to the authenticated user, including individual record lookups, imports, updates, dismissal, and deletion.
+The backend uses a controller-service-repository structure with DTOs, entity mapping, validation, and centralized exception handling. Application, status-history, analytics, company, follow-up, Gmail-connection, and Gmail-candidate queries are scoped to the authenticated user.
 
 ## Repository Structure
 
@@ -91,10 +97,19 @@ JobTrackr/
 | `GET`    | `/api/applications/{id}`    | View an owned application                           |
 | `PUT`    | `/api/applications/{id}`    | Update an owned application                         |
 | `DELETE` | `/api/applications/{id}`    | Delete an owned application                         |
-| `GET`    | `/api/dashboard`            | Retrieve user-specific analytics                    |
+| `GET`    | `/api/dashboard`            | Retrieve user-specific summary and action metrics   |
+| `GET`    | `/api/analytics`            | Retrieve date-range trends and funnel analytics     |
+| `GET`    | `/api/companies`            | Retrieve searchable company-level insights          |
+| `GET`    | `/api/follow-ups`           | Retrieve overdue, upcoming, and stale action queues |
 | `GET`    | `/api/health`               | Check API health                                    |
 
-Registration, password login, Google login, Google configuration, the one-time Gmail OAuth callback, and health checks are public. Starting or removing a Gmail connection, scanning Gmail, reviewing import candidates, account linking, connected identities, application data, and dashboard analytics require an `Authorization: Bearer <token>` header.
+Registration, password login, Google login, Google configuration, the one-time Gmail OAuth callback, and health checks are public. Starting or removing a Gmail connection, scanning Gmail, reviewing import candidates, account linking, connected identities, application data, dashboard metrics, analytics, company insights, and follow-up queues require an `Authorization: Bearer <token>` header.
+
+### Analytics behavior
+
+The Analytics screen can compare the last 30 days, 90 days, six months, or all recorded activity. Funnel metrics use application status history so an application remains counted as having reached Interview or Offer after it later moves to another status. Follow-up queues treat Applied, Assessment, Interview, and Offer as active stages; “stale” means an active application has not changed for at least 14 days.
+
+Migration V5 creates a baseline history entry for applications that existed before Phase 10. Because earlier transitions were not available to backfill, historical stage accuracy for those records is limited to what can be inferred from their current status. Every transition made after V5 is recorded exactly.
 
 ## Local Development
 
@@ -230,10 +245,10 @@ npm test -- --watch=false
 npm run build
 ```
 
-Current Phase 9 baseline:
+Current Phase 10 baseline:
 
-- 47 backend tests covering password and Google authentication, Gmail token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, authorization, validation, user data isolation, services, JWT behavior, and API integration
-- 65 frontend tests covering API services, route guards, password and Google authentication, Gmail connection settings, Gmail scanning and review, dashboard, application workflows, and navigation
+- 55 backend tests covering password and Google authentication, Gmail token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, status history, analytics calculations, follow-up classification, authorization, validation, user data isolation, services, JWT behavior, and API integration
+- 76 frontend tests covering API services, route guards, password and Google authentication, Gmail connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, application workflows, and navigation
 
 ## Continuous Integration
 
@@ -259,6 +274,7 @@ Merges should only proceed after all required checks pass.
 - Gmail scans are bounded by age and message count; raw message bodies and raw Gmail message IDs are not stored
 - Import candidates use SHA-256 user-bound message fingerprints for deduplication and are always queried by owner
 - No application is created from Gmail until the owner reviews validated fields and explicitly approves the import
+- Status history, analytics, company insights, and follow-up queues are always loaded by authenticated user ID
 - The API is stateless and validates signed JWTs on protected endpoints
 - CORS origins are environment-configurable
 - Request DTOs enforce field, date, URL, currency, and salary validation
@@ -281,8 +297,8 @@ For a future production hardening pass, token storage can move from browser loca
 | 7     | Google Sign-In and secure account linking                         | Complete |
 | 8     | Gmail connection and permission management                        | Complete |
 | 9     | Workday-email detection, import review, and deduplication          | Complete |
-| 10    | Advanced company and application analytics                        | Next     |
-| 11    | Gemini-assisted resume and cover-letter workflows                 | Planned  |
+| 10    | Advanced company and application analytics                        | Complete |
+| 11    | Gemini-assisted resume and cover-letter workflows                 | Next     |
 | 12    | Docker, Render deployment, final QA, documentation, and V1 release | Planned  |
 
 ### Phase Closeout Checklist
@@ -297,8 +313,8 @@ Every phase is complete only after:
 ## Planned Improvements
 
 - Broader provider-specific email detection rules based on real-world opt-in feedback
-- Company-focused analytics and richer dashboard views
 - Gemini-assisted resume and cover-letter generation with user review
+- Exportable analytics and configurable follow-up reminder windows
 - Dockerfiles, Docker Compose, and cost-conscious Render deployment configuration
 - Hosted application screenshot and deployment link
 - End-to-end browser tests for production-critical workflows

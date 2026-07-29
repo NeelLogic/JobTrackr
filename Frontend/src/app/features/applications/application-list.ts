@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ApplicationApiService } from '../../core/api/application-api.service';
 import { apiErrorMessage } from '../../core/api-error';
@@ -33,6 +33,7 @@ import {
 export class ApplicationList implements OnInit {
   private readonly api = inject(ApplicationApiService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
 
   readonly loading = signal(false);
   readonly error = signal('');
@@ -70,6 +71,10 @@ export class ApplicationList implements OnInit {
   });
 
   ngOnInit(): void {
+    const search = this.route.snapshot.queryParamMap.get('search');
+    if (search) {
+      this.filters.controls.search.setValue(search);
+    }
     this.load(0);
   }
 

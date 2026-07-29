@@ -1,0 +1,112 @@
+<main id="main-content" class="page" tabindex="-1">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Next actions</p>
+      <h1>Follow-ups</h1>
+      <p>Stay ahead of deadlines and revive opportunities that have gone quiet.</p>
+    </div>
+    <a class="button button--primary" routerLink="/applications/new">Add application</a>
+  </div>
+
+  @if (loading()) {
+    <section class="card loading-state" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Preparing your follow-up queue...</span>
+    </section>
+  } @else if (error()) {
+    <section class="card message-state" role="alert">
+      <div class="state-icon state-icon--error" aria-hidden="true">!</div>
+      <h3>Follow-ups could not be loaded</h3>
+      <p>{{ error() }}</p>
+      <button class="button button--secondary" type="button" (click)="retry()">Try again</button>
+    </section>
+  } @else if (summary(); as followUps) {
+    <section class="followup-stats" aria-label="Follow-up summary">
+      @for (group of groups; track group.key) {
+        <button
+          class="followup-stat card"
+          type="button"
+          [class.active]="selectedGroup() === group.key"
+          [attr.aria-pressed]="selectedGroup() === group.key"
+          (click)="selectGroup(group.key)"
+        >
+          <span>{{ group.label }}</span>
+          <strong>{{ count(group.key) }}</strong>
+          <small>
+            @switch (group.key) {
+              @case ('overdue') {
+                Past due
+              }
+              @case ('dueToday') {
+                Needs action
+              }
+              @case ('upcoming') {
+                Next 14 days
+              }
+              @default {
+                14+ days quiet
+              }
+            }
+          </small>
+        </button>
+      }
+    </section>
+
+    <section class="followup-card card">
+      <div class="followup-card__heading">
+        <div>
+          <h2>{{ groupTitle() }}</h2>
+          <p>{{ groupDescription() }}</p>
+        </div>
+        <span>{{ selectedApplications().length }}</span>
+      </div>
+
+      <div class="followup-list">
+        @for (application of selectedApplications(); track application.id) {
+          <article class="followup-item">
+            <div class="company-mark" aria-hidden="true">
+              {{ application.company.charAt(0).toUpperCase() }}
+            </div>
+            <div class="followup-item__main">
+              <a [routerLink]="['/applications', application.id]">{{ application.jobTitle }}</a>
+              <span
+                >{{ application.company
+                }}{{ application.location ? ' · ' + application.location : '' }}</span
+              >
+            </div>
+            <div class="followup-item__status">
+              <span [class]="statusClass(application.status)">
+                {{ enumLabel(application.status) }}
+              </span>
+            </div>
+            <div class="followup-item__date">
+              @if (selectedGroup() === 'stale') {
+                <span>Last activity</span>
+                <time [attr.datetime]="application.updatedAt">
+                  {{ application.updatedAt | date: 'MMM d, y' }}
+                </time>
+              } @else if (application.followUpDate) {
+                <span>Follow up</span>
+                <time [attr.datetime]="application.followUpDate">
+                  {{ application.followUpDate | date: 'MMM d, y' : 'UTC' }}
+                </time>
+              }
+            </div>
+            <a
+              class="followup-item__action"
+              [routerLink]="['/applications', application.id, 'edit']"
+              >Update</a
+            >
+          </article>
+        } @empty {
+          <div class="message-state">
+            <div class="state-icon" aria-hidden="true">&#10003;</div>
+            <h3>Queue clear</h3>
+            <p>{{ emptyMessage() }}</p>
+            <a class="button button--secondary" routerLink="/applications">View applications</a>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</main>

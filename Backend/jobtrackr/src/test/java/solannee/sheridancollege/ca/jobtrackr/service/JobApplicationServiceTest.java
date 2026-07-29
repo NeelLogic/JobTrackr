@@ -11,6 +11,7 @@ import solannee.sheridancollege.ca.jobtrackr.exception.InvalidRequestException;
 import solannee.sheridancollege.ca.jobtrackr.exception.ResourceNotFoundException;
 import solannee.sheridancollege.ca.jobtrackr.mapper.ApplicationMapper;
 import solannee.sheridancollege.ca.jobtrackr.model.*;
+import solannee.sheridancollege.ca.jobtrackr.repository.ApplicationStatusHistoryRepository;
 import solannee.sheridancollege.ca.jobtrackr.repository.JobApplicationRepository;
 
 import java.math.BigDecimal;
@@ -26,12 +27,13 @@ import static org.mockito.Mockito.*;
 class JobApplicationServiceTest {
 
     @Mock JobApplicationRepository repository;
+    @Mock ApplicationStatusHistoryRepository statusHistoryRepository;
     private JobApplicationService service;
     private User user;
 
     @BeforeEach
     void setUp() {
-        service = new JobApplicationService(repository, new ApplicationMapper());
+        service = new JobApplicationService(repository, statusHistoryRepository, new ApplicationMapper());
         user = new User();
         user.setId(7L);
     }
@@ -50,6 +52,14 @@ class JobApplicationServiceTest {
         assertThat(saved.getValue().getCompany()).isEqualTo("Acme");
         assertThat(saved.getValue().getLocation()).isNull();
         assertThat(saved.getValue().getSalaryCurrency()).isEqualTo("CAD");
+        ArgumentCaptor<ApplicationStatusHistory> history =
+                ArgumentCaptor.forClass(ApplicationStatusHistory.class);
+        verify(statusHistoryRepository).save(history.capture());
+        assertThat(history.getValue().getApplication()).isSameAs(saved.getValue());
+        assertThat(history.getValue().getUser()).isSameAs(user);
+        assertThat(history.getValue().getFromStatus()).isNull();
+        assertThat(history.getValue().getToStatus()).isEqualTo(ApplicationStatus.APPLIED);
+        assertThat(history.getValue().getChangedAt()).isNotNull();
     }
 
     @Test
@@ -87,6 +97,55 @@ class JobApplicationServiceTest {
         assertThatThrownBy(() -> service.get(user, 99L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Application not found");
+    }
+
+    @Test
+    void updateRecordsHistoryOnlyWhenStatusChanges() {
+        JobApplication application = application(ApplicationStatus.APPLIED);
+        when(repository.findByIdAndUserId(11L, 7L)).thenReturn(Optional.of(application));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.update(user, 11L, request(
+                ApplicationStatus.INTERVIEW,
+                LocalDate.now(),
+                null,
+                null,
+                null
+        ));
+
+        ArgumentCaptor<ApplicationStatusHistory> history =
+                ArgumentCaptor.forClass(ApplicationStatusHistory.class);
+        verify(statusHistoryRepository).save(history.capture());
+        assertThat(history.getValue().getFromStatus()).isEqualTo(ApplicationStatus.APPLIED);
+        assertThat(history.getValue().getToStatus()).isEqualTo(ApplicationStatus.INTERVIEW);
+    }
+
+    @Test
+    void updateDoesNotRecordHistoryWhenStatusIsUnchanged() {
+        JobApplication application = application(ApplicationStatus.APPLIED);
+        when(repository.findByIdAndUserId(11L, 7L)).thenReturn(Optional.of(application));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.update(user, 11L, request(
+                ApplicationStatus.APPLIED,
+                LocalDate.now(),
+                null,
+                null,
+                null
+        ));
+
+        verifyNoInteractions(statusHistoryRepository);
+    }
+
+    private JobApplication application(ApplicationStatus status) {
+        JobApplication application = new JobApplication();
+        application.setId(11L);
+        application.setUser(user);
+        application.setCompany("Acme");
+        application.setJobTitle("Engineer");
+        application.setStatus(status);
+        application.setEmploymentType(EmploymentType.FULL_TIME);
+        return application;
     }
 
     private ApplicationRequest request(

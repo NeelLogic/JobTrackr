@@ -6,6 +6,13 @@ export interface DashboardSummary {
   interviews: number;
   offers: number;
   rejections: number;
+  activeApplications: number;
+  overdueFollowUps: number;
+  upcomingFollowUps: number;
+  staleApplications: number;
+  responseRate: number;
+  interviewRate: number;
+  offerRate: number;
   applicationsByStatus: Record<ApplicationStatus, number>;
   recentApplications: JobApplication[];
 }

@@ -40,6 +40,37 @@
         <a class="button button--primary" routerLink="/applications/new">Add application</a>
       </section>
     } @else {
+      <section class="attention-grid" aria-label="Items needing attention">
+        <a class="attention-card card" routerLink="/follow-ups">
+          <span class="attention-card__icon attention-card__icon--red" aria-hidden="true">!</span>
+          <div>
+            <strong>{{ dashboard.overdueFollowUps }}</strong>
+            <span>Overdue follow-ups</span>
+          </div>
+          <small>Review queue &rarr;</small>
+        </a>
+        <a class="attention-card card" routerLink="/follow-ups">
+          <span class="attention-card__icon attention-card__icon--blue" aria-hidden="true"
+            >&#128197;</span
+          >
+          <div>
+            <strong>{{ dashboard.upcomingFollowUps }}</strong>
+            <span>Upcoming in 14 days</span>
+          </div>
+          <small>Plan ahead &rarr;</small>
+        </a>
+        <a class="attention-card card" routerLink="/follow-ups">
+          <span class="attention-card__icon attention-card__icon--amber" aria-hidden="true"
+            >&#8635;</span
+          >
+          <div>
+            <strong>{{ dashboard.staleApplications }}</strong>
+            <span>Stale applications</span>
+          </div>
+          <small>Restart momentum &rarr;</small>
+        </a>
+      </section>
+
       <div class="dashboard-grid">
         <section class="analytics-card card">
           <div class="card-heading">
@@ -47,7 +78,7 @@
               <h2>Applications by status</h2>
               <p>How your current pipeline is distributed.</p>
             </div>
-            <a routerLink="/applications">View pipeline</a>
+            <a routerLink="/analytics">Open analytics</a>
           </div>
 
           <div class="status-list">

@@ -1,0 +1,132 @@
+<main id="main-content" class="page" tabindex="-1">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Organizations</p>
+      <h1>Companies</h1>
+      <p>See where you are applying and which companies are moving forward.</p>
+    </div>
+    <a class="button button--primary" routerLink="/applications/new">Add application</a>
+  </div>
+
+  <section class="company-filters card">
+    <form [formGroup]="filters" (ngSubmit)="applyFilters()">
+      <label>
+        <span>Search companies</span>
+        <input
+          type="search"
+          formControlName="search"
+          placeholder="Company name"
+          autocomplete="off"
+        />
+      </label>
+      <label>
+        <span>Sort by</span>
+        <select formControlName="sort">
+          @for (option of sortOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>Order</span>
+        <select formControlName="direction">
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+      </label>
+      <button class="button button--primary" type="submit" [disabled]="loading()">Apply</button>
+    </form>
+  </section>
+
+  <section class="company-results card" [attr.aria-busy]="loading()">
+    <div class="company-results__heading">
+      <div>
+        <h2>Company activity</h2>
+        <p>
+          @if (summary(); as result) {
+            {{ result.totalCompanies }}
+            {{ result.totalCompanies === 1 ? 'company' : 'companies' }}
+          } @else {
+            Your company insights will appear here.
+          }
+        </p>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state" role="status">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Loading companies...</span>
+      </div>
+    } @else if (error()) {
+      <div class="message-state" role="alert">
+        <div class="state-icon state-icon--error" aria-hidden="true">!</div>
+        <h3>Companies could not be loaded</h3>
+        <p>{{ error() }}</p>
+        <button class="button button--secondary" type="button" (click)="retry()">Try again</button>
+      </div>
+    } @else if (summary(); as result) {
+      @if (result.companies.length === 0) {
+        <div class="message-state">
+          <div class="state-icon" aria-hidden="true">&#9675;</div>
+          @if (filters.controls.search.value) {
+            <h3>No matching companies</h3>
+            <p>Try another company name or clear the current search.</p>
+            <button class="button button--secondary" type="button" (click)="clearSearch()">
+              Clear search
+            </button>
+          } @else {
+            <h3>No companies yet</h3>
+            <p>Add an application to start seeing organization-level insights.</p>
+            <a class="button button--primary" routerLink="/applications/new">Add application</a>
+          }
+        </div>
+      } @else {
+        <div class="company-list">
+          <div class="company-list__labels" aria-hidden="true">
+            <span>Company</span><span>Pipeline</span><span>Outcomes</span><span>Last activity</span>
+          </div>
+          @for (company of result.companies; track company.company) {
+            <article class="company-row">
+              <div class="company-name">
+                <span aria-hidden="true">{{ company.company.charAt(0).toUpperCase() }}</span>
+                <div>
+                  <h3>{{ company.company }}</h3>
+                  <a [routerLink]="['/applications']" [queryParams]="{ search: company.company }">
+                    View applications
+                  </a>
+                </div>
+              </div>
+              <div class="company-stat">
+                <strong>{{ company.totalApplications }}</strong>
+                <span>Total applications</span>
+                <small>{{ company.activeApplications }} active</small>
+              </div>
+              <div class="outcome-pair">
+                <div>
+                  <strong>{{ company.interviewsReached }}</strong
+                  ><span>Interviews</span>
+                </div>
+                <div>
+                  <strong>{{ company.offersReached }}</strong
+                  ><span>Offers</span>
+                </div>
+              </div>
+              <div class="last-activity">
+                <time [attr.datetime]="company.lastActivityAt">
+                  {{ company.lastActivityAt | date: 'MMM d, y' }}
+                </time>
+                @if (company.latestApplicationDate) {
+                  <span
+                    >Latest application
+                    {{ company.latestApplicationDate | date: 'MMM d' : 'UTC' }}</span
+                  >
+                }
+              </div>
+            </article>
+          }
+        </div>
+      }
+    }
+  </section>
+</main>

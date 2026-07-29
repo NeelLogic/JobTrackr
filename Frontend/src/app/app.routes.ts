@@ -34,6 +34,24 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'analytics',
+        title: 'Analytics | JobTrackr',
+        loadComponent: () =>
+          import('./features/analytics/analytics').then((module) => module.Analytics),
+      },
+      {
+        path: 'companies',
+        title: 'Companies | JobTrackr',
+        loadComponent: () =>
+          import('./features/companies/companies').then((module) => module.Companies),
+      },
+      {
+        path: 'follow-ups',
+        title: 'Follow-ups | JobTrackr',
+        loadComponent: () =>
+          import('./features/follow-ups/follow-ups').then((module) => module.FollowUps),
+      },
+      {
         path: 'applications/new',
         title: 'Add application | JobTrackr',
         loadComponent: () =>

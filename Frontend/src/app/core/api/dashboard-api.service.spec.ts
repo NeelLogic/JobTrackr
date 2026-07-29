@@ -25,6 +25,13 @@ describe('DashboardApiService', () => {
       interviews: 2,
       offers: 1,
       rejections: 3,
+      activeApplications: 7,
+      overdueFollowUps: 2,
+      upcomingFollowUps: 3,
+      staleApplications: 1,
+      responseRate: 58.3,
+      interviewRate: 16.7,
+      offerRate: 8.3,
       applicationsByStatus: {
         SAVED: 1,
         APPLIED: 3,

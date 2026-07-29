@@ -15,6 +15,13 @@ describe('Dashboard', () => {
     interviews: 2,
     offers: 1,
     rejections: 2,
+    activeApplications: 6,
+    overdueFollowUps: 2,
+    upcomingFollowUps: 3,
+    staleApplications: 1,
+    responseRate: 50,
+    interviewRate: 20,
+    offerRate: 10,
     applicationsByStatus: {
       SAVED: 1,
       APPLIED: 3,
@@ -55,7 +62,7 @@ describe('Dashboard', () => {
 
     expect(api.getSummary).toHaveBeenCalledOnce();
     expect(component.firstName()).toBe('Alex');
-    expect(component.stats().map((stat) => stat.value)).toEqual([10, 4, 2, 1, 2]);
+    expect(component.stats().map((stat) => stat.value)).toEqual(['10', '6', '4', '50%', '1']);
     expect(component.loading()).toBe(false);
   });
 

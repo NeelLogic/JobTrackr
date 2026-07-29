@@ -11,22 +11,21 @@ import org.springframework.transaction.annotation.Transactional;
 import solannee.sheridancollege.ca.jobtrackr.dto.application.ApplicationRequest;
 import solannee.sheridancollege.ca.jobtrackr.dto.application.ApplicationResponse;
 import solannee.sheridancollege.ca.jobtrackr.dto.application.PageResponse;
-import solannee.sheridancollege.ca.jobtrackr.dto.dashboard.DashboardResponse;
 import solannee.sheridancollege.ca.jobtrackr.exception.InvalidRequestException;
 import solannee.sheridancollege.ca.jobtrackr.exception.ResourceNotFoundException;
 import solannee.sheridancollege.ca.jobtrackr.mapper.ApplicationMapper;
 import solannee.sheridancollege.ca.jobtrackr.model.ApplicationStatus;
+import solannee.sheridancollege.ca.jobtrackr.model.ApplicationStatusHistory;
 import solannee.sheridancollege.ca.jobtrackr.model.EmploymentType;
 import solannee.sheridancollege.ca.jobtrackr.model.JobApplication;
 import solannee.sheridancollege.ca.jobtrackr.model.User;
+import solannee.sheridancollege.ca.jobtrackr.repository.ApplicationStatusHistoryRepository;
 import solannee.sheridancollege.ca.jobtrackr.repository.JobApplicationRepository;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -38,6 +37,7 @@ public class JobApplicationService {
     );
 
     private final JobApplicationRepository applicationRepository;
+    private final ApplicationStatusHistoryRepository statusHistoryRepository;
     private final ApplicationMapper applicationMapper;
 
     @Transactional(readOnly = true)
@@ -78,14 +78,21 @@ public class JobApplicationService {
         JobApplication application = new JobApplication();
         application.setUser(user);
         copyRequest(request, application);
-        return applicationMapper.toResponse(applicationRepository.save(application));
+        JobApplication saved = applicationRepository.save(application);
+        recordStatusChange(saved, null, saved.getStatus());
+        return applicationMapper.toResponse(saved);
     }
 
     @Transactional
     public ApplicationResponse update(User user, Long id, ApplicationRequest request) {
         JobApplication application = findOwnedApplication(user.getId(), id);
+        ApplicationStatus previousStatus = application.getStatus();
         copyRequest(request, application);
-        return applicationMapper.toResponse(applicationRepository.save(application));
+        JobApplication saved = applicationRepository.save(application);
+        if (previousStatus != saved.getStatus()) {
+            recordStatusChange(saved, previousStatus, saved.getStatus());
+        }
+        return applicationMapper.toResponse(saved);
     }
 
     @Transactional
@@ -93,37 +100,23 @@ public class JobApplicationService {
         applicationRepository.delete(findOwnedApplication(user.getId(), id));
     }
 
-    @Transactional(readOnly = true)
-    public DashboardResponse dashboard(User user) {
-        Long userId = user.getId();
-        LocalDate today = LocalDate.now();
-        LocalDate monthStart = today.withDayOfMonth(1);
-        LocalDate monthEnd = today.withDayOfMonth(today.lengthOfMonth());
-
-        Map<ApplicationStatus, Long> counts = new EnumMap<>(ApplicationStatus.class);
-        for (ApplicationStatus status : ApplicationStatus.values()) {
-            counts.put(status, applicationRepository.countByUserIdAndStatus(userId, status));
-        }
-
-        List<ApplicationResponse> recent = applicationRepository.findTop5ByUserIdOrderByUpdatedAtDesc(userId)
-                .stream()
-                .map(applicationMapper::toResponse)
-                .toList();
-
-        return new DashboardResponse(
-                applicationRepository.countByUserId(userId),
-                applicationRepository.countByUserIdAndApplicationDateBetween(userId, monthStart, monthEnd),
-                counts.get(ApplicationStatus.INTERVIEW),
-                counts.get(ApplicationStatus.OFFER),
-                counts.get(ApplicationStatus.REJECTED),
-                Collections.unmodifiableMap(counts),
-                recent
-        );
-    }
-
     private JobApplication findOwnedApplication(Long userId, Long applicationId) {
         return applicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+    }
+
+    private void recordStatusChange(
+            JobApplication application,
+            ApplicationStatus fromStatus,
+            ApplicationStatus toStatus
+    ) {
+        ApplicationStatusHistory history = new ApplicationStatusHistory();
+        history.setApplication(application);
+        history.setUser(application.getUser());
+        history.setFromStatus(fromStatus);
+        history.setToStatus(toStatus);
+        history.setChangedAt(Instant.now());
+        statusHistoryRepository.save(history);
     }
 
     private void copyRequest(ApplicationRequest request, JobApplication application) {

@@ -21,26 +21,53 @@
       </button>
     </div>
 
+    <a class="sidebar__add" routerLink="/applications/new" (click)="closeMenu()">
+      <span aria-hidden="true">+</span> Add application
+    </a>
+
     <nav aria-label="Primary navigation">
+      <p class="nav-section">Overview</p>
       <a routerLink="/dashboard" routerLinkActive="active" (click)="closeMenu()">
-        <span class="nav-icon" aria-hidden="true">&#8962;</span> Dashboard
+        <span class="nav-icon" aria-hidden="true">&#8962;</span>
+        <span>Dashboard</span>
       </a>
+      <a routerLink="/analytics" routerLinkActive="active" (click)="closeMenu()">
+        <span class="nav-icon" aria-hidden="true">&#8645;</span>
+        <span>Analytics</span>
+      </a>
+
+      <p class="nav-section">Tracking</p>
       <a
         routerLink="/applications"
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: true }"
         (click)="closeMenu()"
       >
-        <span class="nav-icon" aria-hidden="true">&#9633;</span> Applications
+        <span class="nav-icon" aria-hidden="true">&#9633;</span>
+        <span>Applications</span>
       </a>
-      <a routerLink="/applications/new" routerLinkActive="active" (click)="closeMenu()">
-        <span class="nav-icon" aria-hidden="true">+</span> Add application
+      <a routerLink="/companies" routerLinkActive="active" (click)="closeMenu()">
+        <span class="nav-icon" aria-hidden="true">&#9675;</span>
+        <span>Companies</span>
       </a>
+      <a routerLink="/follow-ups" routerLinkActive="active" (click)="closeMenu()">
+        <span class="nav-icon" aria-hidden="true">&#10003;</span>
+        <span>Follow-ups</span>
+        @if (overdueFollowUps() > 0) {
+          <span class="nav-badge" aria-label="Overdue follow-ups">{{ overdueFollowUps() }}</span>
+        }
+      </a>
+
+      <p class="nav-section">Integrations</p>
       <a routerLink="/imports" routerLinkActive="active" (click)="closeMenu()">
-        <span class="nav-icon" aria-hidden="true">&#9993;</span> Gmail import
+        <span class="nav-icon" aria-hidden="true">&#9993;</span>
+        <span>Gmail import</span>
       </a>
+
+      <p class="nav-section">Account</p>
       <a routerLink="/settings" routerLinkActive="active" (click)="closeMenu()">
-        <span class="nav-icon" aria-hidden="true">&#9881;</span> Settings
+        <span class="nav-icon" aria-hidden="true">&#9881;</span>
+        <span>Settings</span>
       </a>
     </nav>
 

@@ -1,0 +1,188 @@
+<main id="main-content" class="page analytics-page" tabindex="-1">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Performance</p>
+      <h1>Application analytics</h1>
+      <p>Understand your activity, response rates, and stage conversion.</p>
+    </div>
+    <div class="range-picker" aria-label="Analytics date range">
+      @for (option of ranges; track option) {
+        <button
+          type="button"
+          [class.active]="range() === option"
+          [attr.aria-pressed]="range() === option"
+          [disabled]="loading()"
+          (click)="selectRange(option)"
+        >
+          {{ rangeLabel(option) }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <section class="card loading-state" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Calculating your analytics...</span>
+    </section>
+  } @else if (error()) {
+    <section class="card message-state" role="alert">
+      <div class="state-icon state-icon--error" aria-hidden="true">!</div>
+      <h3>Analytics could not be loaded</h3>
+      <p>{{ error() }}</p>
+      <button class="button button--secondary" type="button" (click)="retry()">Try again</button>
+    </section>
+  } @else if (summary(); as analytics) {
+    <div class="period-note">
+      @if (analytics.fromDate) {
+        {{ analytics.fromDate | date: 'MMM d, y' : 'UTC' }}&ndash;{{
+          analytics.toDate | date: 'MMM d, y' : 'UTC'
+        }}
+      } @else {
+        All recorded activity
+      }
+    </div>
+
+    <section class="metric-grid" aria-label="Analytics summary">
+      <article class="metric card">
+        <span>Applications</span>
+        <strong>{{ analytics.applicationsInRange }}</strong>
+        @if (analytics.range !== 'ALL_TIME') {
+          <small [class.positive]="analytics.applicationGrowthRate > 0">
+            {{ analytics.applicationGrowthRate > 0 ? '+' : ''
+            }}{{ analytics.applicationGrowthRate }}% vs previous period
+          </small>
+        } @else {
+          <small>Across your complete history</small>
+        }
+      </article>
+      <article class="metric card">
+        <span>Response rate</span>
+        <strong>{{ analytics.responseRate }}%</strong>
+        <small>Assessment, interview, offer, or rejection</small>
+      </article>
+      <article class="metric card">
+        <span>Interview rate</span>
+        <strong>{{ analytics.interviewRate }}%</strong>
+        <small>Applied roles that reached interviews</small>
+      </article>
+      <article class="metric card">
+        <span>Offer rate</span>
+        <strong>{{ analytics.offerRate }}%</strong>
+        <small>Applied roles that reached an offer</small>
+      </article>
+    </section>
+
+    @if (analytics.applicationsInRange === 0) {
+      <section class="card empty-state">
+        <div class="empty-icon" aria-hidden="true">&#8599;</div>
+        <h2>No activity in this range</h2>
+        <p>Select a wider date range or add an application to start building insights.</p>
+        <a class="button button--primary" routerLink="/applications/new">Add application</a>
+      </section>
+    } @else {
+      <div class="analytics-grid">
+        <section class="card panel panel--wide">
+          <div class="panel__heading">
+            <div>
+              <h2>Application activity</h2>
+              <p>Applications added over the selected period.</p>
+            </div>
+          </div>
+          <div class="trend-chart" role="img" aria-label="Application activity over time">
+            @for (point of analytics.trend; track point.periodStart) {
+              <div class="trend-column">
+                <span class="trend-value">{{ point.applications }}</span>
+                <div class="trend-track">
+                  <span [style.height.%]="trendHeight(point.applications)"></span>
+                </div>
+                <time [attr.datetime]="point.periodStart">{{
+                  point.periodStart | date: 'MMM d' : 'UTC'
+                }}</time>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="card panel">
+          <div class="panel__heading">
+            <div>
+              <h2>Stage funnel</h2>
+              <p>How many applications reached each milestone.</p>
+            </div>
+          </div>
+          <div class="funnel">
+            @for (stage of analytics.funnel; track stage.stage) {
+              <div class="funnel__row">
+                <div>
+                  <span>{{ enumLabel(stage.stage) }}</span>
+                  <strong>{{ stage.applications }}</strong>
+                </div>
+                <div class="funnel__bar">
+                  <span [style.width.%]="stage.conversionFromApplied"></span>
+                </div>
+                <small>{{ stage.conversionFromApplied }}% of applied</small>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="card panel">
+          <div class="panel__heading">
+            <div>
+              <h2>Current mix</h2>
+              <p>Status and employment-type distribution.</p>
+            </div>
+          </div>
+          <div class="distribution-columns">
+            <div>
+              <h3>Status</h3>
+              @for (item of statusDistribution(); track item.label) {
+                <div class="distribution-row">
+                  <span>{{ item.label }}</span
+                  ><strong>{{ item.value }}</strong>
+                  <div><span [style.width.%]="distributionWidth(item.value)"></span></div>
+                </div>
+              }
+            </div>
+            <div>
+              <h3>Employment type</h3>
+              @for (item of employmentDistribution(); track item.label) {
+                <div class="distribution-row">
+                  <span>{{ item.label }}</span
+                  ><strong>{{ item.value }}</strong>
+                  <div><span [style.width.%]="distributionWidth(item.value)"></span></div>
+                </div>
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="card panel panel--wide">
+          <div class="panel__heading">
+            <div>
+              <h2>Top companies</h2>
+              <p>Organizations receiving most of your applications.</p>
+            </div>
+            <a routerLink="/companies">View companies</a>
+          </div>
+          <div class="company-strip">
+            @for (company of analytics.topCompanies; track company.company) {
+              <a
+                [routerLink]="['/applications']"
+                [queryParams]="{ search: company.company }"
+                class="company-chip"
+              >
+                <span>{{ company.company.charAt(0).toUpperCase() }}</span>
+                <div>
+                  <strong>{{ company.company }}</strong>
+                  <small>{{ company.totalApplications }} applications</small>
+                </div>
+              </a>
+            }
+          </div>
+        </section>
+      </div>
+    }
+  }
+</main>
