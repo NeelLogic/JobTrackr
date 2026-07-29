@@ -10,9 +10,18 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.util.UriComponentsBuilder;
+import solannee.sheridancollege.ca.jobtrackr.integration.gmail.GmailOAuthClient;
+import solannee.sheridancollege.ca.jobtrackr.integration.gmail.GoogleGmailProfile;
+import solannee.sheridancollege.ca.jobtrackr.integration.gmail.GoogleOAuthTokens;
+import solannee.sheridancollege.ca.jobtrackr.repository.GmailConnectionRepository;
 import solannee.sheridancollege.ca.jobtrackr.security.GoogleIdentityVerifier;
 import solannee.sheridancollege.ca.jobtrackr.security.VerifiedGoogleIdentity;
+import solannee.sheridancollege.ca.jobtrackr.service.GmailIntegrationService;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -35,6 +44,12 @@ class ApiIntegrationTests {
 
     @MockitoBean
     GoogleIdentityVerifier googleIdentityVerifier;
+
+    @MockitoBean
+    GmailOAuthClient gmailOAuthClient;
+
+    @Autowired
+    GmailConnectionRepository gmailConnections;
 
     private static int sequence;
 
@@ -85,6 +100,21 @@ class ApiIntegrationTests {
                         .content(body))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
+    }
+
+    private String beginGmailConnection(String token) throws Exception {
+        String response = mvc.perform(post("/api/integrations/gmail/connect")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.authorizationUrl").value(
+                        org.hamcrest.Matchers.startsWith(
+                                "https://accounts.google.com/o/oauth2/v2/auth")))
+                .andReturn().getResponse().getContentAsString();
+        String authorizationUrl = json.readTree(response).get("authorizationUrl").asText();
+        return UriComponentsBuilder.fromUriString(authorizationUrl)
+                .build()
+                .getQueryParams()
+                .getFirst("state");
     }
 
     @Test
@@ -208,6 +238,160 @@ class ApiIntegrationTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(
                         "Google account email must match your JobTrackr account email"));
+    }
+
+    @Test
+    void gmailConnectionEndpointsRequireAuthentication() throws Exception {
+        mvc.perform(get("/api/integrations/gmail"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/integrations/gmail/connect"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(delete("/api/integrations/gmail"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(gmailOAuthClient);
+    }
+
+    @Test
+    void gmailAuthorizationUsesRequiredSecurityParameters() throws Exception {
+        String email = "gmail-url" + (++sequence) + "@example.com";
+        String token = registerEmail(email);
+
+        String response = mvc.perform(post("/api/integrations/gmail/connect")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String authorizationUrl = json.readTree(response).get("authorizationUrl").asText();
+        var query = UriComponentsBuilder.fromUriString(authorizationUrl)
+                .build()
+                .getQueryParams();
+
+        assertThat(query.getFirst("client_id"))
+                .isEqualTo("jobtrackr-gmail-test-client.apps.googleusercontent.com");
+        assertThat(query.getFirst("redirect_uri"))
+                .isEqualTo("http://localhost:8080/api/integrations/gmail/callback");
+        assertThat(query.getFirst("scope")).isEqualTo(
+                GmailIntegrationService.GMAIL_READONLY_SCOPE);
+        assertThat(query.getFirst("access_type")).isEqualTo("offline");
+        assertThat(query.getFirst("prompt")).isEqualTo("consent");
+        assertThat(query.getFirst("login_hint")).isEqualTo(email);
+        assertThat(query.getFirst("state")).hasSizeGreaterThan(32);
+    }
+
+    @Test
+    void callbackConnectsOnlyTheOwningUserAndStoresEncryptedTokens() throws Exception {
+        String email = "gmail-owner" + (++sequence) + "@example.com";
+        String ownerToken = registerEmail(email);
+        String otherToken = register("gmail-other");
+        String state = beginGmailConnection(ownerToken);
+        GoogleOAuthTokens tokens = new GoogleOAuthTokens(
+                "plain-access-token",
+                "plain-refresh-token",
+                3600,
+                GmailIntegrationService.GMAIL_READONLY_SCOPE
+        );
+        when(gmailOAuthClient.exchangeAuthorizationCode("authorization-code"))
+                .thenReturn(tokens);
+        when(gmailOAuthClient.getProfile("plain-access-token"))
+                .thenReturn(new GoogleGmailProfile(email));
+
+        mvc.perform(get("/api/integrations/gmail/callback")
+                        .param("code", "authorization-code")
+                        .param("state", state))
+                .andExpect(status().isFound())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .redirectedUrl("http://localhost:4200/settings?gmail=connected"));
+
+        mvc.perform(get("/api/integrations/gmail")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.configured").value(true))
+                .andExpect(jsonPath("$.connected").value(true))
+                .andExpect(jsonPath("$.email").value(email));
+        mvc.perform(get("/api/integrations/gmail")
+                        .header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.connected").value(false))
+                .andExpect(jsonPath("$.email").doesNotExist());
+
+        var stored = gmailConnections.findAll().stream()
+                .filter(connection -> connection.getGoogleEmail().equals(email))
+                .findFirst()
+                .orElseThrow();
+        assertThat(stored.getEncryptedAccessToken()).doesNotContain("plain-access-token");
+        assertThat(stored.getEncryptedRefreshToken()).doesNotContain("plain-refresh-token");
+
+        mvc.perform(get("/api/integrations/gmail/callback")
+                        .param("code", "authorization-code")
+                        .param("state", state))
+                .andExpect(status().isFound())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .redirectedUrl("http://localhost:4200/settings?gmail=error"));
+        verify(gmailOAuthClient, times(1)).exchangeAuthorizationCode("authorization-code");
+    }
+
+    @Test
+    void callbackRejectsMismatchedGmailAndConsumesState() throws Exception {
+        String token = register("gmail-mismatch");
+        String state = beginGmailConnection(token);
+        GoogleOAuthTokens tokens = new GoogleOAuthTokens(
+                "mismatch-access",
+                "mismatch-refresh",
+                3600,
+                GmailIntegrationService.GMAIL_READONLY_SCOPE
+        );
+        when(gmailOAuthClient.exchangeAuthorizationCode("mismatch-code")).thenReturn(tokens);
+        when(gmailOAuthClient.getProfile("mismatch-access"))
+                .thenReturn(new GoogleGmailProfile("someone-else@example.com"));
+
+        mvc.perform(get("/api/integrations/gmail/callback")
+                        .param("code", "mismatch-code")
+                        .param("state", state))
+                .andExpect(status().isFound())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .redirectedUrl("http://localhost:4200/settings?gmail=error"));
+        mvc.perform(get("/api/integrations/gmail")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.connected").value(false));
+        verify(gmailOAuthClient).revoke("mismatch-refresh");
+
+        mvc.perform(get("/api/integrations/gmail/callback")
+                        .param("code", "mismatch-code")
+                        .param("state", state))
+                .andExpect(status().isFound())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .redirectedUrl("http://localhost:4200/settings?gmail=error"));
+        verify(gmailOAuthClient, times(1)).exchangeAuthorizationCode("mismatch-code");
+    }
+
+    @Test
+    void userCanDisconnectTheirOwnGmailConnection() throws Exception {
+        String email = "gmail-disconnect" + (++sequence) + "@example.com";
+        String token = registerEmail(email);
+        String state = beginGmailConnection(token);
+        when(gmailOAuthClient.exchangeAuthorizationCode("disconnect-code")).thenReturn(
+                new GoogleOAuthTokens(
+                        "disconnect-access",
+                        "disconnect-refresh",
+                        3600,
+                        GmailIntegrationService.GMAIL_READONLY_SCOPE
+                ));
+        when(gmailOAuthClient.getProfile("disconnect-access"))
+                .thenReturn(new GoogleGmailProfile(email));
+        mvc.perform(get("/api/integrations/gmail/callback")
+                        .param("code", "disconnect-code")
+                        .param("state", state))
+                .andExpect(status().isFound());
+
+        mvc.perform(delete("/api/integrations/gmail")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/integrations/gmail")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.connected").value(false));
+        verify(gmailOAuthClient).revoke("disconnect-refresh");
     }
 
     @Test
