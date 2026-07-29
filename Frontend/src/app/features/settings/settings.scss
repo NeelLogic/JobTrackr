@@ -48,7 +48,7 @@
   gap: 28px;
 }
 
-.connection-row div:not(.google-mark) {
+.connection-row div:not(.google-mark, .gmail-mark) {
   display: grid;
   gap: 4px;
 }
@@ -71,6 +71,62 @@
   font-weight: 850;
 }
 
+.settings-alert {
+  max-width: 780px;
+}
+
+.connection-identity {
+  display: flex !important;
+  align-items: center;
+  gap: 14px !important;
+}
+
+.gmail-mark {
+  display: grid !important;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  color: #c5221f;
+  background: #fff;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.12);
+  font-weight: 850;
+}
+
+.disconnect-confirmation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid #fecdca;
+  border-radius: 11px;
+  background: var(--danger-surface);
+
+  > div:first-child {
+    display: grid;
+    gap: 4px;
+  }
+
+  span {
+    color: var(--ink-muted);
+    font-size: 0.84rem;
+  }
+}
+
+.disconnect-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+
+.button--danger {
+  color: #fff;
+  background: var(--danger);
+}
+
 .connection-loading {
   color: var(--ink-muted);
 }
@@ -81,6 +137,12 @@
   }
 
   .connection-row--action {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .disconnect-confirmation,
+  .disconnect-actions {
     align-items: stretch;
     flex-direction: column;
   }
