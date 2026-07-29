@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
+import { GoogleIdentityService } from '../../core/google-identity.service';
 import { AuthService } from '../../core/auth.service';
 import { AuthResponse, LoginRequest } from '../../models/auth.models';
 import { Login } from './login';
@@ -17,10 +18,18 @@ describe('Login', () => {
   function setup() {
     const auth = {
       login: vi.fn<(request: LoginRequest) => ReturnType<AuthService['login']>>(),
+      loginWithGoogle: vi.fn<(credential: string) => ReturnType<AuthService['loginWithGoogle']>>(),
+    };
+    const googleIdentity = {
+      renderButton: vi.fn().mockResolvedValue(false),
     };
     TestBed.configureTestingModule({
       imports: [Login],
-      providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: auth },
+        { provide: GoogleIdentityService, useValue: googleIdentity },
+      ],
     });
     const router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
@@ -79,6 +88,17 @@ describe('Login', () => {
     component.submit();
 
     expect(component.error()).toBe('Invalid email or password.');
+    expect(component.loading()).toBe(false);
+  });
+
+  it('signs in with a Google credential and redirects to the dashboard', () => {
+    const { auth, component, router } = setup();
+    auth.loginWithGoogle.mockReturnValue(of(response));
+
+    component.signInWithGoogle('google-credential');
+
+    expect(auth.loginWithGoogle).toHaveBeenCalledWith('google-credential');
+    expect(router.navigate).toHaveBeenCalledWith(['/dashboard']);
     expect(component.loading()).toBe(false);
   });
 });

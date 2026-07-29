@@ -30,6 +30,12 @@
         <div id="login-error" class="alert alert--error" role="alert">{{ error() }}</div>
       }
 
+      <app-google-sign-in-button
+        [disabled]="loading()"
+        (credentialSelected)="signInWithGoogle($event)"
+      />
+      <div class="auth-divider"><span>or use your email</span></div>
+
       <label for="login-email">
         Email address
         <input

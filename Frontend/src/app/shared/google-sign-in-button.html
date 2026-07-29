@@ -1,0 +1,18 @@
+<div
+  class="google-button"
+  [class.google-button--disabled]="disabled()"
+  [attr.aria-disabled]="disabled()"
+>
+  <div #container></div>
+</div>
+
+@if (loading()) {
+  <p class="google-message" role="status">Loading Google sign-in...</p>
+} @else if (error()) {
+  <div class="google-message google-message--error" role="alert">
+    {{ error() }}
+    <button type="button" (click)="retry()">Try again</button>
+  </div>
+} @else if (!configured()) {
+  <p class="google-message">Google sign-in is not configured for this environment.</p>
+}

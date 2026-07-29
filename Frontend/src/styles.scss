@@ -298,6 +298,11 @@ h3,
   color: var(--danger);
   background: var(--danger-surface);
 }
+.alert--success {
+  border: 1px solid #a7f3d0;
+  color: #047857;
+  background: #ecfdf5;
+}
 .auth-switch {
   margin: 20px 0 0;
   color: var(--ink-muted);
@@ -307,6 +312,23 @@ h3,
 .auth-switch a {
   font-weight: 700;
   text-decoration: none;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    height: 1px;
+    flex: 1;
+    background: var(--border);
+    content: '';
+  }
 }
 
 .page {

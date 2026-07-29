@@ -28,6 +28,12 @@
         <div id="register-error" class="alert alert--error" role="alert">{{ error() }}</div>
       }
 
+      <app-google-sign-in-button
+        [disabled]="loading()"
+        (credentialSelected)="signUpWithGoogle($event)"
+      />
+      <div class="auth-divider"><span>or create an account with email</span></div>
+
       <label for="register-name">
         Full name
         <input

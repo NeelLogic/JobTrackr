@@ -57,6 +57,12 @@ export const routes: Routes = [
             (module) => module.ApplicationDetail,
           ),
       },
+      {
+        path: 'settings',
+        title: 'Account settings | JobTrackr',
+        loadComponent: () =>
+          import('./features/settings/settings').then((module) => module.Settings),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],
   },

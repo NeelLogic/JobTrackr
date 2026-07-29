@@ -4,10 +4,11 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { apiErrorMessage } from '../../core/api-error';
+import { GoogleSignInButton } from '../../shared/google-sign-in-button';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, GoogleSignInButton],
   templateUrl: './login.html',
 })
 export class Login {
@@ -42,6 +43,21 @@ export class Login {
       .subscribe({
         next: () => void this.router.navigate(['/dashboard']),
         error: (error) => this.error.set(apiErrorMessage(error, 'Invalid email or password.')),
+      });
+  }
+
+  signInWithGoogle(credential: string): void {
+    if (this.loading()) {
+      return;
+    }
+    this.loading.set(true);
+    this.error.set('');
+    this.auth
+      .loginWithGoogle(credential)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: () => void this.router.navigate(['/dashboard']),
+        error: (error) => this.error.set(apiErrorMessage(error, 'Unable to sign in with Google.')),
       });
   }
 }

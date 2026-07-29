@@ -1,0 +1,35 @@
+:host {
+  display: block;
+}
+
+.google-button {
+  display: flex;
+  min-height: 44px;
+  justify-content: center;
+
+  &--disabled {
+    pointer-events: none;
+    opacity: 0.55;
+  }
+}
+
+.google-message {
+  margin: 8px 0 0;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  text-align: center;
+
+  &--error {
+    color: var(--danger);
+  }
+
+  button {
+    padding: 0;
+    border: 0;
+    color: inherit;
+    background: none;
+    cursor: pointer;
+    font-weight: 750;
+    text-decoration: underline;
+  }
+}
