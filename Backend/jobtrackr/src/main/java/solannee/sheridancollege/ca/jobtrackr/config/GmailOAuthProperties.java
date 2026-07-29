@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.Base64;
 
 @ConfigurationProperties(prefix = "app.integrations.gmail")
 public record GmailOAuthProperties(
@@ -25,9 +26,17 @@ public record GmailOAuthProperties(
     public boolean enabled() {
         return !clientId.isBlank()
                 && !clientSecret.isBlank()
-                && !tokenEncryptionKey.isBlank()
+                && hasValidEncryptionKey()
                 && redirectUri != null
                 && frontendCallbackUrl != null;
+    }
+
+    private boolean hasValidEncryptionKey() {
+        try {
+            return Base64.getDecoder().decode(tokenEncryptionKey).length == 32;
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
     }
 
     private static String normalize(String value) {

@@ -72,19 +72,25 @@ public class GmailIntegrationService {
             throw new InvalidRequestException(
                     "Connected Gmail address must match your JobTrackr account email");
         }
-        if (!hasRequiredScope(tokens.scopes())) {
+        String grantedScopes = normalizedScopes(tokens.scopes());
+        if (!hasRequiredScope(grantedScopes)) {
             bestEffortRevoke(tokens);
             throw new InvalidRequestException("Gmail read permission was not granted");
         }
 
-        connectionStore.save(
-                owner.userId(),
-                profile.emailAddress(),
-                tokens.accessToken(),
-                tokens.refreshToken(),
-                expiresAt(tokens.expiresInSeconds()),
-                tokens.scopes()
-        );
+        try {
+            connectionStore.save(
+                    owner.userId(),
+                    profile.emailAddress(),
+                    tokens.accessToken(),
+                    tokens.refreshToken(),
+                    expiresAt(tokens.expiresInSeconds()),
+                    grantedScopes
+            );
+        } catch (RuntimeException exception) {
+            bestEffortRevoke(tokens);
+            throw exception;
+        }
     }
 
     public void cancelAuthorization(String state) {
@@ -129,11 +135,13 @@ public class GmailIntegrationService {
     }
 
     private boolean hasRequiredScope(String scopes) {
-        if (scopes == null) {
-            return false;
-        }
         return Arrays.stream(scopes.trim().split("\\s+"))
                 .anyMatch(GMAIL_READONLY_SCOPE::equals);
+    }
+
+    private String normalizedScopes(String scopes) {
+        // OAuth permits omitting scope when it is identical to the request.
+        return scopes == null || scopes.isBlank() ? GMAIL_READONLY_SCOPE : scopes.trim();
     }
 
     private Instant expiresAt(long expiresInSeconds) {

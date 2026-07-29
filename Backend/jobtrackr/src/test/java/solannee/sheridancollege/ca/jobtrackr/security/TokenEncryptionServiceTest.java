@@ -43,8 +43,10 @@ class TokenEncryptionServiceTest {
 
     @Test
     void rejectsKeysThatAreNotExactly256Bits() {
-        TokenEncryptionService invalid = new TokenEncryptionService(properties("dG9vLXNob3J0"));
+        GmailOAuthProperties invalidProperties = properties("dG9vLXNob3J0");
+        TokenEncryptionService invalid = new TokenEncryptionService(invalidProperties);
 
+        assertThat(invalidProperties.enabled()).isFalse();
         assertThatThrownBy(() -> invalid.encrypt("token", 42L))
                 .isInstanceOf(IntegrationUnavailableException.class)
                 .hasMessageContaining("token encryption key");

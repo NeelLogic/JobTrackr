@@ -375,7 +375,7 @@ class ApiIntegrationTests {
                         "disconnect-access",
                         "disconnect-refresh",
                         3600,
-                        GmailIntegrationService.GMAIL_READONLY_SCOPE
+                        null
                 ));
         when(gmailOAuthClient.getProfile("disconnect-access"))
                 .thenReturn(new GoogleGmailProfile(email));
