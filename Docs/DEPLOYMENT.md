@@ -5,8 +5,9 @@ This document defines the V1 container and Render deployment workflow.
 > **Current status:** The backend and frontend images, Docker Compose stack,
 > health checks, Flyway migrations, Nginx proxy, Angular route fallback, and
 > MySQL persistence have been verified locally. `render.yaml` defines the
-> hosted infrastructure, but it has not been applied. No paid Render resource
-> has been created.
+> hosted frontend and backend, but it has not been applied. The Blueprint
+> defines no paid Render resource, and the external Aiven free MySQL plan
+> requires no card.
 
 ## V1 Deployment Profile
 
@@ -28,7 +29,7 @@ The hosted topology is:
 flowchart TB
     USER["Browser"] -->|"HTTPS"| FRONTEND["Render static site<br/>Angular"]
     FRONTEND -->|"HTTPS / JSON"| BACKEND["Render web service<br/>Spring Boot container"]
-    BACKEND -->|"Private JDBC"| MYSQL["Render private service<br/>MySQL 8.4 + disk"]
+    BACKEND -->|"TLS JDBC"| MYSQL["Aiven free service<br/>MySQL + backups"]
     GITHUB["GitHub main"] -->|"Deploy after checks pass"| FRONTEND
     GITHUB -->|"Deploy after checks pass"| BACKEND
 ```
@@ -45,13 +46,17 @@ Applying `render.yaml` creates:
 
 - a free static site;
 - a free web-service instance for the API, subject to Render's current free-tier
-  limits;
-- a paid private MySQL service with a 10 GB persistent disk.
+  limits.
 
-Render private services do not support the free plan, and persistent disks are
-paid resources. Review the price shown by Render before applying the Blueprint.
-Deleting containers locally does not affect Render, and deleting Render
-resources does not remove local Docker data.
+The database is created separately on Aiven's free MySQL plan. The plan requires
+no card, has no fixed expiry, and currently includes 1 GB storage, 1 GB RAM, one
+CPU, and backups. It is a single-node demo service without an SLA. Aiven can
+power it off after sustained inactivity and sends notice before doing so.
+
+Render free web services spin down after inactivity and can take about a minute
+to wake. This topology is appropriate for a public portfolio demo, not a
+high-availability production workload. Deleting local containers does not
+affect Render or Aiven.
 
 Never commit production credentials, paste them into screenshots, or use them
 as Docker build arguments.
@@ -72,12 +77,12 @@ docker compose up --build
 
 Services:
 
-| Service    | Local access                     | Notes                                      |
-| ---------- | -------------------------------- | ------------------------------------------ |
-| Frontend   | `http://localhost:4200`          | Nginx, Angular routing, and `/api` proxy   |
-| Backend    | `http://localhost:8080`          | Direct API access for diagnostics          |
-| MySQL      | Docker network only              | Non-root application user and named volume |
-| API health | `http://localhost:8080/api/health` | Returns `{"status":"UP"}`                |
+| Service    | Local access                       | Notes                                      |
+| ---------- | ---------------------------------- | ------------------------------------------ |
+| Frontend   | `http://localhost:4200`            | Nginx, Angular routing, and `/api` proxy   |
+| Backend    | `http://localhost:8080`            | Direct API access for diagnostics          |
+| MySQL      | Docker network only                | Non-root application user and named volume |
+| API health | `http://localhost:8080/api/health` | Returns `{"status":"UP"}`                  |
 
 Inspect health:
 
@@ -147,11 +152,10 @@ for secrets.
 
 The repository-root `render.yaml` defines:
 
-| Service name                    | Type                | Region |
-| ------------------------------- | ------------------- | ------ |
-| `jobtrackr-neellogic`           | Angular static site | CDN    |
-| `jobtrackr-api-neellogic`       | Docker web service  | Ohio   |
-| `jobtrackr-mysql-neellogic`     | Private MySQL 8.4   | Ohio   |
+| Service name              | Type                | Region |
+| ------------------------- | ------------------- | ------ |
+| `jobtrackr-neellogic`     | Angular static site | CDN    |
+| `jobtrackr-api-neellogic` | Docker web service  | Ohio   |
 
 The expected public URLs are:
 
@@ -163,48 +167,51 @@ https://jobtrackr-api-neellogic.onrender.com
 If Render requires different service names, update all affected values before
 deployment:
 
-- backend `DB_URL`;
 - backend `CORS_ALLOWED_ORIGINS`;
 - frontend `JOBTRACKR_API_URL`;
 - Google authorized JavaScript origin.
 
 The API and frontend deploy from `main` only after linked GitHub checks pass.
-MySQL is pulled from the official `mysql:8.4` image and is not publicly
-accessible.
+The API receives Aiven connection values as unsynced Render environment
+variables. Flyway creates the JobTrackr schema when the API first connects.
 
 ## Required Production Configuration
 
 ### Backend
 
-| Variable               | Source                                                     |
-| ---------------------- | ---------------------------------------------------------- |
-| `PORT`                 | Blueprint value `10000`                                    |
-| `DB_URL`               | Private MySQL hostname in the Blueprint                    |
-| `DB_USERNAME`          | Dedicated `jobtrackr` account                              |
-| `DB_PASSWORD`          | Generated MySQL service value referenced by the API        |
-| `DB_POOL_SIZE`         | `5` for the small V1 service                               |
-| `JWT_SECRET`           | Render-generated random value                              |
-| `JWT_EXPIRATION_MS`    | `86400000`                                                  |
-| `CORS_ALLOWED_ORIGINS` | Exact frontend HTTPS origin                                |
+| Variable               | Source                                                        |
+| ---------------------- | ------------------------------------------------------------- |
+| `PORT`                 | Blueprint value `10000`                                       |
+| `DB_URL`               | Aiven JDBC URL entered as an unsynced Render secret           |
+| `DB_USERNAME`          | Aiven service username entered only in Render                 |
+| `DB_PASSWORD`          | Aiven service password entered only in Render                 |
+| `DB_POOL_SIZE`         | `5` for the small V1 service                                  |
+| `JWT_SECRET`           | Render-generated random value                                 |
+| `JWT_EXPIRATION_MS`    | `86400000`                                                    |
+| `CORS_ALLOWED_ORIGINS` | Exact frontend HTTPS origin                                   |
 | `GOOGLE_CLIENT_ID`     | Public production Google Sign-In client ID, entered in Render |
 
 ### Frontend
 
-| Variable             | Value                                                    |
-| -------------------- | -------------------------------------------------------- |
-| `NODE_VERSION`       | `22`                                                     |
-| `JOBTRACKR_API_URL`  | Exact backend HTTPS URL followed by `/api`               |
+| Variable            | Value                                      |
+| ------------------- | ------------------------------------------ |
+| `NODE_VERSION`      | `22`                                       |
+| `JOBTRACKR_API_URL` | Exact backend HTTPS URL followed by `/api` |
 
-### MySQL
+### Aiven MySQL
 
-| Variable               | Source                         |
-| ---------------------- | ------------------------------ |
-| `MYSQL_DATABASE`       | `jobtrackr_db`                 |
-| `MYSQL_USER`           | `jobtrackr`                    |
-| `MYSQL_PASSWORD`       | Render-generated random value  |
-| `MYSQL_ROOT_PASSWORD`  | Separate Render-generated value |
+Create a free Aiven for MySQL service and copy its host, port, database,
+username, and password from **Overview > Connection information**.
 
-The persistent disk must remain mounted at `/var/lib/mysql`.
+The Render `DB_URL` must require TLS:
+
+```text
+jdbc:mysql://AIVEN_HOST:AIVEN_PORT/defaultdb?sslmode=require&serverTimezone=UTC
+```
+
+Use the actual database name if it differs from `defaultdb`. Do not include the
+username or password in the URL. Aiven connection values must never be committed
+or placed in frontend configuration.
 
 ### Gmail variables
 
@@ -242,28 +249,43 @@ docker compose config --quiet
 docker compose build
 ```
 
-### 2. Create the Render Blueprint
+### 2. Create the free Aiven MySQL service
+
+1. Create an Aiven account without adding a payment method.
+2. Select **Create service > MySQL > Free**.
+3. Name the service `jobtrackr-mysql` and create it.
+4. Wait until its status is **Running**.
+5. Open **Quick connect** and record the host, port, database, username, and
+   password in a password manager.
+6. Build the TLS JDBC URL shown in the Aiven section above.
+
+The free tier has no fixed expiry, but Aiven can power off an inactive service.
+It can be powered on again from the Aiven Console.
+
+### 3. Create the Render Blueprint
 
 1. Sign in to Render and connect the `NeelLogic/JobTrackr` repository.
 2. Select **New > Blueprint**.
 3. Choose the repository and the root `render.yaml`.
-4. Confirm the Ohio region for the API and MySQL.
-5. Review the paid MySQL private-service and disk price.
-6. Supply `GOOGLE_CLIENT_ID` when Render requests the unsynced value.
-7. Apply the Blueprint only after accepting the displayed cost.
+4. Confirm the Ohio region for the API.
+5. Supply the Aiven `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` when Render
+   requests the unsynced values.
+6. Supply `GOOGLE_CLIENT_ID`.
+7. Confirm both Render services use the free plan and apply the Blueprint.
 
-### 3. Verify service configuration
+### 4. Verify service configuration
 
 Confirm:
 
-- MySQL is private and its disk mount is `/var/lib/mysql`;
+- the JDBC URL uses `sslmode=require`;
+- Aiven credentials exist only in the API environment;
 - the API health path is `/api/health`;
 - the API has no Gmail environment variables;
 - the frontend API URL matches the actual backend URL;
 - CORS contains only the actual frontend origin;
 - automatic deployment waits for GitHub checks.
 
-### 4. Update Google Sign-In
+### 5. Update Google Sign-In
 
 In the production Google Cloud project, add the deployed frontend URL under
 **Authorized JavaScript origins**:
@@ -275,7 +297,7 @@ https://jobtrackr-neellogic.onrender.com
 Use the actual Render URL if the service name changed. Google Sign-In uses only
 the public browser client ID; do not add a client secret to Angular.
 
-### 5. Verify production
+### 6. Verify production
 
 Using fresh accounts:
 
@@ -294,8 +316,8 @@ Using fresh accounts:
 
 ## Backup and Recovery
 
-Use `mysqldump` for database-consistent backups. A persistent-disk snapshot alone
-is not a safe MySQL backup strategy.
+Use `mysqldump` for portable database-consistent backups in addition to Aiven's
+included backups.
 
 - Back up before any material schema or data migration.
 - Restore into a separate database first and validate it.
@@ -314,7 +336,8 @@ is not a safe MySQL backup strategy.
 - [ ] Flyway migrations complete
 - [ ] Restart persistence test passes
 - [ ] No secret appears in Git history or tracked files
-- [ ] MySQL is private and uses persistent storage
+- [ ] Aiven MySQL is running and the JDBC connection requires TLS
+- [ ] Aiven credentials exist only in Render's backend environment
 - [ ] Backup and restore procedure is verified
 - [ ] JWT secret is generated only in Render
 - [ ] CORS contains only the deployed frontend origin
@@ -328,7 +351,7 @@ is not a safe MySQL backup strategy.
 - [Docker on Render](https://render.com/docs/docker)
 - [Render Blueprints](https://render.com/docs/blueprint-spec)
 - [Environment variables and secrets](https://render.com/docs/configure-environment-variables)
-- [Deploy MySQL](https://render.com/docs/deploy-mysql)
-- [Persistent disks](https://render.com/docs/disks)
 - [Static sites](https://render.com/docs/static-sites)
 - [Health checks](https://render.com/docs/health-checks)
+- [Aiven free MySQL](https://aiven.io/docs/products/mysql/concepts/mysql-free-tier)
+- [Connect Java to Aiven MySQL](https://aiven.io/docs/products/mysql/howto/connect-with-java)

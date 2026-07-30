@@ -4,7 +4,7 @@
 
 JobTrackr is a full-stack job application tracker for students and new graduates. It provides a secure, user-specific workspace for organizing opportunities, following application progress, and understanding job-search activity.
 
-> **Project status:** Phase 12 is in progress. The complete application now runs locally as production-style Docker containers with Nginx, Spring Boot, and persistent MySQL. Render infrastructure is defined but has not been provisioned, so no paid resources have been created. The public V1 deployment will provide Google Sign-In while keeping restricted-scope Gmail import as an optional self-hosted feature. Gemini-assisted workflows remain deferred to V2.
+> **Project status:** Phase 12 is in progress. The complete application runs locally as production-style Docker containers with Nginx, Spring Boot, and persistent MySQL. The hosted V1 Blueprint defines only free Render frontend/backend services, while its external Aiven free MySQL plan requires no card. The public deployment will provide Google Sign-In while keeping restricted-scope Gmail import as an optional self-hosted feature. Gemini-assisted workflows remain deferred to V2.
 
 ## Features
 
@@ -33,19 +33,19 @@ JobTrackr is a full-stack job application tracker for students and new graduates
 - Responsive layouts, keyboard navigation, accessible form errors, and loading, empty, and error states
 - Multi-stage production containers with a non-root backend runtime and health checks
 - Docker Compose orchestration with private networking and persistent MySQL storage
-- Render Blueprint configuration with checks-gated deployments and environment-managed secrets
+- Free Render Blueprint configuration with checks-gated deployments, Aiven MySQL, and environment-managed secrets
 
 ## Tech Stack
 
-| Layer              | Technologies                                                                |
-| ------------------ | --------------------------------------------------------------------------- |
-| Frontend           | Angular 21, TypeScript 5.9, RxJS, SCSS                                      |
-| Backend            | Java 21, Spring Boot 3.5, Spring Security, Spring Data JPA, Bean Validation |
-| Database           | MySQL, Flyway migrations; H2 for automated tests                            |
-| Authentication     | BCrypt, Google Identity Services, OAuth 2.0, JWT, AES-256-GCM token storage |
-| Testing            | JUnit 5, Spring Boot Test, Spring Security Test, Vitest                     |
-| Tooling            | Maven Wrapper, npm, Git, GitHub Actions, Docker Compose                     |
-| Deployment         | Docker, Nginx, Render Blueprint                                             |
+| Layer          | Technologies                                                                |
+| -------------- | --------------------------------------------------------------------------- |
+| Frontend       | Angular 21, TypeScript 5.9, RxJS, SCSS                                      |
+| Backend        | Java 21, Spring Boot 3.5, Spring Security, Spring Data JPA, Bean Validation |
+| Database       | MySQL, Flyway migrations; H2 for automated tests                            |
+| Authentication | BCrypt, Google Identity Services, OAuth 2.0, JWT, AES-256-GCM token storage |
+| Testing        | JUnit 5, Spring Boot Test, Spring Security Test, Vitest                     |
+| Tooling        | Maven Wrapper, npm, Git, GitHub Actions, Docker Compose                     |
+| Deployment     | Docker, Nginx, Render Blueprint, Aiven MySQL                                |
 
 ## Architecture
 
@@ -83,32 +83,32 @@ JobTrackr/
 
 ## API Overview
 
-| Method   | Endpoint                    | Purpose                                             |
-| -------- | --------------------------- | --------------------------------------------------- |
-| `POST`   | `/api/auth/register`        | Create a password account                           |
-| `POST`   | `/api/auth/login`           | Authenticate with a password and receive a JWT      |
-| `GET`    | `/api/auth/google/config`   | Retrieve the public Google client configuration     |
-| `POST`   | `/api/auth/google`          | Authenticate with a verified Google ID credential   |
-| `POST`   | `/api/auth/google/link`     | Link Google to the authenticated user's account     |
-| `GET`    | `/api/auth/identities`      | List the authenticated user's connected identities  |
-| `GET`    | `/api/integrations/gmail`   | Get the current user's Gmail connection status      |
-| `POST`   | `/api/integrations/gmail/connect` | Start Gmail OAuth with a one-time state         |
-| `GET`    | `/api/integrations/gmail/callback` | Complete Google's OAuth redirect                |
-| `DELETE` | `/api/integrations/gmail`   | Disconnect Gmail and remove stored credentials      |
-| `POST`   | `/api/integrations/gmail/scan` | Scan a bounded recent Gmail window on demand      |
-| `GET`    | `/api/integrations/gmail/candidates` | List the current user's pending suggestions |
-| `POST`   | `/api/integrations/gmail/candidates/{id}/import` | Import reviewed application data |
-| `DELETE` | `/api/integrations/gmail/candidates/{id}` | Dismiss an owned suggestion permanently    |
-| `GET`    | `/api/applications`         | Search, filter, sort, and paginate applications     |
-| `POST`   | `/api/applications`         | Create an application                               |
-| `GET`    | `/api/applications/{id}`    | View an owned application                           |
-| `PUT`    | `/api/applications/{id}`    | Update an owned application                         |
-| `DELETE` | `/api/applications/{id}`    | Delete an owned application                         |
-| `GET`    | `/api/dashboard`            | Retrieve user-specific summary and action metrics   |
-| `GET`    | `/api/analytics`            | Retrieve date-range trends and funnel analytics     |
-| `GET`    | `/api/companies`            | Retrieve searchable company-level insights          |
-| `GET`    | `/api/follow-ups`           | Retrieve overdue, upcoming, and stale action queues |
-| `GET`    | `/api/health`               | Check API health                                    |
+| Method   | Endpoint                                         | Purpose                                             |
+| -------- | ------------------------------------------------ | --------------------------------------------------- |
+| `POST`   | `/api/auth/register`                             | Create a password account                           |
+| `POST`   | `/api/auth/login`                                | Authenticate with a password and receive a JWT      |
+| `GET`    | `/api/auth/google/config`                        | Retrieve the public Google client configuration     |
+| `POST`   | `/api/auth/google`                               | Authenticate with a verified Google ID credential   |
+| `POST`   | `/api/auth/google/link`                          | Link Google to the authenticated user's account     |
+| `GET`    | `/api/auth/identities`                           | List the authenticated user's connected identities  |
+| `GET`    | `/api/integrations/gmail`                        | Get the current user's Gmail connection status      |
+| `POST`   | `/api/integrations/gmail/connect`                | Start Gmail OAuth with a one-time state             |
+| `GET`    | `/api/integrations/gmail/callback`               | Complete Google's OAuth redirect                    |
+| `DELETE` | `/api/integrations/gmail`                        | Disconnect Gmail and remove stored credentials      |
+| `POST`   | `/api/integrations/gmail/scan`                   | Scan a bounded recent Gmail window on demand        |
+| `GET`    | `/api/integrations/gmail/candidates`             | List the current user's pending suggestions         |
+| `POST`   | `/api/integrations/gmail/candidates/{id}/import` | Import reviewed application data                    |
+| `DELETE` | `/api/integrations/gmail/candidates/{id}`        | Dismiss an owned suggestion permanently             |
+| `GET`    | `/api/applications`                              | Search, filter, sort, and paginate applications     |
+| `POST`   | `/api/applications`                              | Create an application                               |
+| `GET`    | `/api/applications/{id}`                         | View an owned application                           |
+| `PUT`    | `/api/applications/{id}`                         | Update an owned application                         |
+| `DELETE` | `/api/applications/{id}`                         | Delete an owned application                         |
+| `GET`    | `/api/dashboard`                                 | Retrieve user-specific summary and action metrics   |
+| `GET`    | `/api/analytics`                                 | Retrieve date-range trends and funnel analytics     |
+| `GET`    | `/api/companies`                                 | Retrieve searchable company-level insights          |
+| `GET`    | `/api/follow-ups`                                | Retrieve overdue, upcoming, and stale action queues |
+| `GET`    | `/api/health`                                    | Check API health                                    |
 
 Registration, password login, Google login, Google configuration, the one-time Gmail OAuth callback, and health checks are public. Starting or removing a Gmail connection, scanning Gmail, reviewing import candidates, account linking, connected identities, application data, dashboard metrics, analytics, company insights, and follow-up queues require an `Authorization: Bearer <token>` header.
 
@@ -270,30 +270,30 @@ The default scan examines at most 100 matching messages from the previous 180 da
 
 ## Environment Variables
 
-| Variable                     | Required              | Default                                      | Description                                                   |
-| ---------------------------- | --------------------- | -------------------------------------------- | ------------------------------------------------------------- |
-| `DB_URL`                     | No                    | Local MySQL `jobtrackr_db` URL               | JDBC connection URL                                           |
-| `DB_USERNAME`                | No                    | `jobtrackr`                                  | Database username                                             |
-| `DB_PASSWORD`                | Yes                   | None                                         | Database password                                             |
-| `DB_POOL_SIZE`               | No                    | `10`                                         | Maximum connection-pool size                                  |
-| `PORT`                       | No                    | `8080`                                       | Backend HTTP port; Render supplies its service port            |
-| `JWT_SECRET`                 | Yes                   | None                                         | JWT signing secret; use at least 32 random characters         |
-| `JWT_EXPIRATION_MS`          | No                    | `86400000`                                   | Token lifetime in milliseconds                                |
-| `CORS_ALLOWED_ORIGINS`       | No                    | `http://localhost:4200`                      | Comma-separated allowed frontend origins                      |
-| `GOOGLE_CLIENT_ID`           | No                    | Empty                                        | Public client ID that enables Google Sign-In                  |
-| `GOOGLE_GMAIL_CLIENT_ID`     | For Gmail integration | Empty                                        | OAuth web-client ID for the Gmail server flow                 |
-| `GOOGLE_GMAIL_CLIENT_SECRET` | For Gmail integration | Empty                                        | OAuth client secret; backend only                             |
-| `GMAIL_TOKEN_ENCRYPTION_KEY` | For Gmail integration | Empty                                        | Base64-encoded 32-byte key for AES-256-GCM token encryption   |
-| `GOOGLE_GMAIL_REDIRECT_URI`  | No                    | Local backend Gmail callback                 | Must exactly match the Google OAuth client redirect URI       |
-| `GMAIL_FRONTEND_CALLBACK_URL`| No                    | `http://localhost:4200/settings`             | Fixed frontend destination after the OAuth callback           |
-| `GMAIL_OAUTH_STATE_TTL`      | No                    | `10m`                                        | Lifetime of a single-use Gmail OAuth state                    |
-| `GMAIL_IMPORT_LOOKBACK_DAYS` | No                    | `180`                                        | Recent Gmail window; backend limits the value to 1–365 days   |
-| `GMAIL_IMPORT_MAX_MESSAGES`  | No                    | `100`                                        | Maximum messages per scan; backend limits the value to 1–100  |
-| `JOBTRACKR_API_URL`          | Frontend build        | `/api`                                       | Public API base URL embedded in the generated frontend config |
-| `DOCKER_DB_PASSWORD`         | Docker only           | Local development value                      | Non-root MySQL password used by Docker Compose                |
-| `DOCKER_DB_ROOT_PASSWORD`    | Docker only           | Local development value                      | MySQL root password used only by the local container          |
+| Variable                      | Required              | Default                          | Description                                                   |
+| ----------------------------- | --------------------- | -------------------------------- | ------------------------------------------------------------- |
+| `DB_URL`                      | No                    | Local MySQL `jobtrackr_db` URL   | JDBC URL; hosted Aiven connections must require TLS           |
+| `DB_USERNAME`                 | No                    | `jobtrackr`                      | Database username                                             |
+| `DB_PASSWORD`                 | Yes                   | None                             | Database password                                             |
+| `DB_POOL_SIZE`                | No                    | `10`                             | Maximum connection-pool size                                  |
+| `PORT`                        | No                    | `8080`                           | Backend HTTP port; Render supplies its service port           |
+| `JWT_SECRET`                  | Yes                   | None                             | JWT signing secret; use at least 32 random characters         |
+| `JWT_EXPIRATION_MS`           | No                    | `86400000`                       | Token lifetime in milliseconds                                |
+| `CORS_ALLOWED_ORIGINS`        | No                    | `http://localhost:4200`          | Comma-separated allowed frontend origins                      |
+| `GOOGLE_CLIENT_ID`            | No                    | Empty                            | Public client ID that enables Google Sign-In                  |
+| `GOOGLE_GMAIL_CLIENT_ID`      | For Gmail integration | Empty                            | OAuth web-client ID for the Gmail server flow                 |
+| `GOOGLE_GMAIL_CLIENT_SECRET`  | For Gmail integration | Empty                            | OAuth client secret; backend only                             |
+| `GMAIL_TOKEN_ENCRYPTION_KEY`  | For Gmail integration | Empty                            | Base64-encoded 32-byte key for AES-256-GCM token encryption   |
+| `GOOGLE_GMAIL_REDIRECT_URI`   | No                    | Local backend Gmail callback     | Must exactly match the Google OAuth client redirect URI       |
+| `GMAIL_FRONTEND_CALLBACK_URL` | No                    | `http://localhost:4200/settings` | Fixed frontend destination after the OAuth callback           |
+| `GMAIL_OAUTH_STATE_TTL`       | No                    | `10m`                            | Lifetime of a single-use Gmail OAuth state                    |
+| `GMAIL_IMPORT_LOOKBACK_DAYS`  | No                    | `180`                            | Recent Gmail window; backend limits the value to 1–365 days   |
+| `GMAIL_IMPORT_MAX_MESSAGES`   | No                    | `100`                            | Maximum messages per scan; backend limits the value to 1–100  |
+| `JOBTRACKR_API_URL`           | Frontend build        | `/api`                           | Public API base URL embedded in the generated frontend config |
+| `DOCKER_DB_PASSWORD`          | Docker only           | Local development value          | Non-root MySQL password used by Docker Compose                |
+| `DOCKER_DB_ROOT_PASSWORD`     | Docker only           | Local development value          | MySQL root password used only by the local container          |
 
-Never commit real credentials or production secrets. Configure them through local environment variables and, for deployment, the Render environment settings. The Google client ID is public configuration, but it remains environment-specific and is not hard-coded into the Angular application.
+Never commit real credentials or production secrets. Configure them through local environment variables and, for deployment, the Render environment settings. Aiven connection values belong only in Render's secret settings. The Google client ID is public configuration, but it remains environment-specific and is not hard-coded into the Angular application.
 
 ## Testing
 
@@ -317,7 +317,7 @@ Current Phase 12 baseline:
 
 - 58 backend tests covering password and Google authentication, Gmail configuration, token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, status history, analytics calculations, follow-up classification, authorization, validation, user data isolation, services, JWT behavior, and API integration
 - 79 frontend tests covering API services, route guards, password and Google authentication, Gmail availability and connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, application workflows, and navigation
-- 4 Node tests covering safe frontend runtime API configuration and JavaScript-string escaping
+- 5 Node tests covering safe frontend runtime API configuration, JavaScript-string escaping, and free Render Blueprint constraints
 - Local container verification covering image builds, health checks, Flyway migrations, Nginx proxying, Angular deep links, and MySQL persistence across a full restart
 
 ## Continuous Integration
@@ -357,20 +357,20 @@ For a future production hardening pass, token storage can move from browser loca
 
 ## Project Phases
 
-| Phase | Scope                                                             | Status   |
-| ----- | ----------------------------------------------------------------- | -------- |
-| 1     | Repository foundation and planning                                | Complete |
-| 2     | Backend architecture and authentication                           | Complete |
-| 3     | Application management, validation, and data isolation            | Complete |
-| 4     | Dashboard analytics and query capabilities                        | Complete |
-| 5     | Angular frontend and API integration                              | Complete |
-| 6     | Frontend testing, accessibility, responsive polish, and CI gates  | Complete |
-| 7     | Google Sign-In and secure account linking                         | Complete |
-| 8     | Gmail connection and permission management                        | Complete |
-| 9     | Workday-email detection, import review, and deduplication          | Complete |
-| 10    | Advanced company and application analytics                        | Complete |
-| 11    | Gemini-assisted resume and cover-letter workflows                 | Deferred (V2) |
-| 12    | Docker, Render deployment, final QA, documentation, and V1 release | In progress |
+| Phase | Scope                                                              | Status        |
+| ----- | ------------------------------------------------------------------ | ------------- |
+| 1     | Repository foundation and planning                                 | Complete      |
+| 2     | Backend architecture and authentication                            | Complete      |
+| 3     | Application management, validation, and data isolation             | Complete      |
+| 4     | Dashboard analytics and query capabilities                         | Complete      |
+| 5     | Angular frontend and API integration                               | Complete      |
+| 6     | Frontend testing, accessibility, responsive polish, and CI gates   | Complete      |
+| 7     | Google Sign-In and secure account linking                          | Complete      |
+| 8     | Gmail connection and permission management                         | Complete      |
+| 9     | Workday-email detection, import review, and deduplication          | Complete      |
+| 10    | Advanced company and application analytics                         | Complete      |
+| 11    | Gemini-assisted resume and cover-letter workflows                  | Deferred (V2) |
+| 12    | Docker, Render deployment, final QA, documentation, and V1 release | In progress   |
 
 ### Phase Closeout Checklist
 

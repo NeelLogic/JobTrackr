@@ -1,25 +1,4 @@
 services:
-  - type: pserv
-    name: jobtrackr-mysql-neellogic
-    runtime: image
-    plan: starter
-    region: ohio
-    image:
-      url: docker.io/library/mysql:8.4
-    envVars:
-      - key: MYSQL_DATABASE
-        value: jobtrackr_db
-      - key: MYSQL_USER
-        value: jobtrackr
-      - key: MYSQL_PASSWORD
-        generateValue: true
-      - key: MYSQL_ROOT_PASSWORD
-        generateValue: true
-    disk:
-      name: mysql-data
-      mountPath: /var/lib/mysql
-      sizeGB: 10
-
   - type: web
     name: jobtrackr-api-neellogic
     runtime: docker
@@ -34,14 +13,11 @@ services:
       - key: PORT
         value: "10000"
       - key: DB_URL
-        value: jdbc:mysql://jobtrackr-mysql-neellogic:3306/jobtrackr_db?serverTimezone=UTC&allowPublicKeyRetrieval=true
+        sync: false
       - key: DB_USERNAME
-        value: jobtrackr
+        sync: false
       - key: DB_PASSWORD
-        fromService:
-          type: pserv
-          name: jobtrackr-mysql-neellogic
-          envVarKey: MYSQL_PASSWORD
+        sync: false
       - key: DB_POOL_SIZE
         value: "5"
       - key: JWT_SECRET

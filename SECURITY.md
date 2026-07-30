@@ -85,7 +85,8 @@ JobTrackr does not currently operate a paid bug-bounty program.
 - Raw Gmail message bodies and raw message IDs are not stored.
 - Flyway owns production schema changes.
 - The Spring Boot runtime image uses a non-root Linux user.
-- MySQL is reachable only on the private container or Render network.
+- Local MySQL is reachable only on the private container network. The hosted
+  Aiven MySQL endpoint requires TLS and credentials stored only in Render.
 - Docker build contexts exclude local environments, logs, build output, and
   editor metadata.
 - Frontend build configuration accepts only a public HTTP(S) or root-relative
@@ -129,8 +130,9 @@ Production and public-demo deployments must:
 
 - use HTTPS;
 - use a strong production-only JWT secret;
-- use a non-root MySQL application account;
-- keep MySQL on a private network with persistent storage;
+- use provider-issued database credentials and a least-privilege application
+  account when the provider supports one;
+- keep local MySQL on a private network and require TLS for hosted Aiven MySQL;
 - restrict CORS to the deployed frontend;
 - keep error details and stack traces disabled;
 - store secrets only in deployment environment settings;

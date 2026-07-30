@@ -9,7 +9,7 @@
     "dev": "node --env-file=../.env node_modules/concurrently/dist/bin/index.js --kill-others-on-fail --names BACKEND,FRONTEND --prefix-colors blue,green \"npm:backend\" \"npm:frontend\"",
     "prebuild": "node scripts/write-runtime-config.mjs",
     "build": "ng build",
-    "config:check": "node --test scripts/write-runtime-config.test.mjs",
+    "config:check": "node --test scripts/*.test.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
