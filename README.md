@@ -317,7 +317,7 @@ Current Phase 12 baseline:
 
 - 58 backend tests covering password and Google authentication, Gmail configuration, token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, status history, analytics calculations, follow-up classification, authorization, validation, user data isolation, services, JWT behavior, and API integration
 - 79 frontend tests covering API services, route guards, password and Google authentication, Gmail availability and connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, application workflows, and navigation
-- 3 Node tests covering safe frontend runtime API configuration
+- 4 Node tests covering safe frontend runtime API configuration and JavaScript-string escaping
 - Local container verification covering image builds, health checks, Flyway migrations, Nginx proxying, Angular deep links, and MySQL persistence across a full restart
 
 ## Continuous Integration
