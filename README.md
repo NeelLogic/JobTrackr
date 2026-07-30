@@ -4,7 +4,7 @@
 
 JobTrackr is a full-stack job application tracker for students and new graduates. It provides a secure, user-specific workspace for organizing opportunities, following application progress, and understanding job-search activity.
 
-> **Project status:** Phase 10 is complete. JobTrackr now combines secure authentication, Gmail-assisted application import, status-history tracking, advanced application analytics, company insights, and an actionable follow-up workspace. Gemini-assisted workflows have been deferred to V2. Phase 12—Docker, Render deployment, final QA, documentation, and the V1.0 release—is next.
+> **Project status:** Phase 12 is in progress. JobTrackr now combines secure authentication, Gmail-assisted application import, status-history tracking, advanced application analytics, company insights, and an actionable follow-up workspace. The public V1 deployment will provide Google Sign-In while keeping restricted-scope Gmail import as an optional self-hosted feature. Gemini-assisted workflows remain deferred to V2.
 
 ## Features
 
@@ -42,7 +42,7 @@ JobTrackr is a full-stack job application tracker for students and new graduates
 | Authentication     | BCrypt, Google Identity Services, OAuth 2.0, JWT, AES-256-GCM token storage |
 | Testing            | JUnit 5, Spring Boot Test, Spring Security Test, Vitest                     |
 | Tooling            | Maven Wrapper, npm, Git, GitHub Actions                                     |
-| Planned deployment | Docker and Render                                                           |
+| Deployment         | Docker and Render                                                           |
 
 ## Architecture
 
@@ -70,7 +70,9 @@ The backend uses a controller-service-repository structure with DTOs, entity map
 JobTrackr/
 |-- Backend/jobtrackr/       Spring Boot API, migrations, and tests
 |-- Frontend/                Angular application and component tests
+|-- Docs/                    Architecture, deployment, security, and integration guides
 |-- .github/workflows/       Continuous integration
+|-- .env.example             Safe local environment-variable template
 `-- README.md
 ```
 
@@ -152,9 +154,27 @@ npm start
 
 Open `http://localhost:4200`. The Angular development proxy forwards `/api` requests to the backend.
 
+### Run both applications with one command
+
+Copy `.env.example` to `.env`, replace every placeholder needed for your local
+setup, and keep `.env` out of Git. Then run:
+
+```powershell
+cd Frontend
+npm ci
+npm run dev
+```
+
+The `dev` command loads the repository-root `.env` file and starts both Spring
+Boot and Angular. Use the separate commands above when you need to restart or
+debug one process independently.
+
 ### Google Sign-In setup
 
 Google Sign-In is disabled automatically when `GOOGLE_CLIENT_ID` is not configured, so local password authentication continues to work without Google.
+
+The public Render deployment uses its own production Google Sign-In client ID,
+so visitors can sign in with their Google account without providing keys.
 
 To enable it:
 
@@ -169,6 +189,14 @@ Phase 7 uses the Google Identity Services callback flow and does not require a r
 ### Gmail connection setup
 
 Phase 9 uses the Phase 8 authorization to run a bounded, on-demand scan of recent application-related messages. Every detected item stays in a private review queue until the user edits and explicitly approves it. JobTrackr does not store raw Gmail message IDs or message bodies.
+
+Gmail import is not enabled on the public V1 deployment because
+`gmail.readonly` is a restricted scope. When its backend credentials are absent,
+the Angular sidebar, import page, and Settings clearly identify Gmail as a
+self-hosted feature and link to
+[the complete Google integration guide](Docs/GOOGLE_INTEGRATION.md). The
+password, Google Sign-In, manual tracking, dashboard, and analytics features
+remain available.
 
 1. In the same Google Cloud project, enable the **Gmail API**.
 2. Keep the OAuth audience in **Testing** and add your Google account as a test user.
@@ -245,10 +273,10 @@ npm test -- --watch=false
 npm run build
 ```
 
-Current Phase 10 baseline:
+Current Phase 12 baseline:
 
-- 55 backend tests covering password and Google authentication, Gmail token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, status history, analytics calculations, follow-up classification, authorization, validation, user data isolation, services, JWT behavior, and API integration
-- 76 frontend tests covering API services, route guards, password and Google authentication, Gmail connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, application workflows, and navigation
+- 58 backend tests covering password and Google authentication, Gmail configuration, token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, status history, analytics calculations, follow-up classification, authorization, validation, user data isolation, services, JWT behavior, and API integration
+- 79 frontend tests covering API services, route guards, password and Google authentication, Gmail availability and connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, application workflows, and navigation
 
 ## Continuous Integration
 
@@ -299,7 +327,7 @@ For a future production hardening pass, token storage can move from browser loca
 | 9     | Workday-email detection, import review, and deduplication          | Complete |
 | 10    | Advanced company and application analytics                        | Complete |
 | 11    | Gemini-assisted resume and cover-letter workflows                 | Deferred (V2) |
-| 12    | Docker, Render deployment, final QA, documentation, and V1 release | Next     |
+| 12    | Docker, Render deployment, final QA, documentation, and V1 release | In progress |
 
 ### Phase Closeout Checklist
 

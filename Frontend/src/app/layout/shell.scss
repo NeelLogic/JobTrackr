@@ -43,19 +43,27 @@
   overflow-y: auto;
   padding-right: 2px;
 }
-.sidebar nav a {
+.sidebar nav a,
+.sidebar nav .nav-link {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: 13px;
   padding: 10px 12px;
+  border: 0;
   border-radius: 10px;
   color: #aeb8ca;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
   font-weight: 600;
+  text-align: left;
   text-decoration: none;
   transition: 0.18s ease;
 }
 .sidebar nav a:hover,
-.sidebar nav a.active {
+.sidebar nav a.active,
+.sidebar nav .nav-link:hover {
   color: white;
   background: rgba(255, 255, 255, 0.09);
 }
@@ -87,6 +95,18 @@
   background: rgba(220, 38, 38, 0.22);
   font-size: 0.65rem;
   font-weight: 800;
+}
+.nav-feature-badge {
+  margin-left: auto;
+  padding: 4px 7px;
+  border: 1px solid rgba(147, 197, 253, 0.22);
+  border-radius: 999px;
+  color: #bfdbfe;
+  background: rgba(37, 99, 235, 0.16);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 .sidebar__profile {
   display: grid;
@@ -132,6 +152,59 @@
 .sidebar__close,
 .backdrop {
   display: none;
+}
+.integration-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(3px);
+}
+.integration-dialog {
+  position: relative;
+  width: min(520px, 100%);
+  padding: 34px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+
+  h2 {
+    margin: 8px 0 12px;
+    font-size: 1.55rem;
+    letter-spacing: -0.035em;
+  }
+
+  > p:last-of-type {
+    margin: 0;
+    color: var(--ink-muted);
+    line-height: 1.65;
+  }
+}
+.integration-dialog__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+.integration-dialog__icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  margin-bottom: 20px;
+  border-radius: 14px;
+  color: var(--primary);
+  background: #eff6ff;
+  font-size: 1.35rem;
+}
+.integration-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
 }
 @media (max-width: 820px) {
   .sidebar {
@@ -180,5 +253,17 @@
   .mobile-header {
     height: 60px;
     padding: 0 16px;
+  }
+  .integration-dialog-backdrop {
+    align-items: end;
+    padding: 12px;
+  }
+  .integration-dialog {
+    padding: 28px 22px 22px;
+    border-radius: 18px 18px 12px 12px;
+  }
+  .integration-dialog__actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

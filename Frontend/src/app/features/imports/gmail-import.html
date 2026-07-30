@@ -48,7 +48,28 @@
       Checking Gmail connection...
     </section>
   } @else if (connection(); as gmailConnection) {
-    @if (!gmailConnection.connected) {
+    @if (!gmailConnection.configured) {
+      <section class="card message-state self-hosted-state">
+        <span class="self-hosted-badge">Self-hosted feature</span>
+        <div class="state-icon" aria-hidden="true">&#9993;</div>
+        <h2>Gmail import is not enabled in this environment</h2>
+        <p>
+          You can continue tracking applications manually. To enable Gmail import, clone or
+          self-host JobTrackr and configure your own Google OAuth credentials on the backend.
+        </p>
+        <div class="self-hosted-actions">
+          <a
+            class="button button--primary"
+            [href]="gmailSetupGuideUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View setup guide
+          </a>
+          <a class="button button--secondary" routerLink="/applications/new">Add manually</a>
+        </div>
+      </section>
+    } @else if (!gmailConnection.connected) {
       <section class="card message-state">
         <div class="state-icon" aria-hidden="true">&#9993;</div>
         <h2>Connect Gmail to begin</h2>

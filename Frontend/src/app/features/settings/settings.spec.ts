@@ -130,6 +130,27 @@ describe('Settings', () => {
     expect(component.gmailConnecting()).toBe(false);
   });
 
+  it('shows self-hosting guidance instead of a connect action when Gmail is unconfigured', () => {
+    const unavailable: GmailConnectionStatus = {
+      configured: false,
+      connected: false,
+      email: null,
+      connectedAt: null,
+      lastSyncAt: null,
+    };
+    const { component, fixture, gmail } = setup([], unavailable);
+    const guideLink = fixture.nativeElement.querySelector(
+      '.self-hosted-connection a[target="_blank"]',
+    ) as HTMLAnchorElement;
+
+    expect(fixture.nativeElement.textContent).toContain('Self-hosted');
+    expect(fixture.nativeElement.textContent).toContain('Available for self-hosted installations');
+    expect(guideLink.href).toContain('Docs/GOOGLE_INTEGRATION.md');
+
+    component.connectGmail();
+    expect(gmail.connect).not.toHaveBeenCalled();
+  });
+
   it('requires confirmation before disconnecting Gmail', () => {
     const connected: GmailConnectionStatus = {
       configured: true,

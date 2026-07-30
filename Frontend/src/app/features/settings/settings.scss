@@ -31,6 +31,11 @@
   font-weight: 800;
 }
 
+.connection-status--self-hosted {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
 .connection-row,
 .connection-loading {
   display: flex;
@@ -136,6 +141,11 @@
 
 .connection-loading {
   color: var(--ink-muted);
+}
+
+.self-hosted-connection {
+  border-color: #bfdbfe;
+  background: #f8fbff;
 }
 
 @media (max-width: 660px) {
