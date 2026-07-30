@@ -78,6 +78,27 @@ describe('GmailImport', () => {
     expect(fixture.nativeElement.textContent).toContain('Connect Gmail to begin');
   });
 
+  it('shows self-hosting guidance and does not load candidates when Gmail is unconfigured', () => {
+    const unavailable: GmailConnectionStatus = {
+      configured: false,
+      connected: false,
+      email: null,
+      connectedAt: null,
+      lastSyncAt: null,
+    };
+    const { fixture, gmail } = setup(unavailable, []);
+    const guideLink = fixture.nativeElement.querySelector(
+      '.self-hosted-actions a[target="_blank"]',
+    ) as HTMLAnchorElement;
+
+    expect(gmail.candidates).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain(
+      'Gmail import is not enabled in this environment',
+    );
+    expect(fixture.nativeElement.textContent).toContain('Add manually');
+    expect(guideLink.href).toContain('Docs/GOOGLE_INTEGRATION.md');
+  });
+
   it('scans Gmail on demand and reports new candidates', () => {
     const { component, gmail } = setup(connected, []);
     gmail.scan.mockReturnValue(
