@@ -4,6 +4,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.conf.json",
+    "frontend": "ng serve --proxy-config proxy.conf.json",
+    "backend": "cd ../Backend/jobtrackr && mvnw.cmd spring-boot:run",
+    "dev": "node --env-file=../.env node_modules/concurrently/dist/bin/index.js --kill-others-on-fail --names BACKEND,FRONTEND --prefix-colors blue,green \"npm:backend\" \"npm:frontend\"",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -24,6 +27,7 @@
     "@angular/build": "^21.2.19",
     "@angular/cli": "^21.2.19",
     "@angular/compiler-cli": "^21.2.0",
+    "concurrently": "^10.0.4",
     "jsdom": "^28.0.0",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2",
