@@ -4,7 +4,7 @@
 
 JobTrackr is a full-stack job application tracker for students and new graduates. It provides a secure, user-specific workspace for organizing opportunities, following application progress, and understanding job-search activity.
 
-> **Project status:** Phase 10 is complete. JobTrackr now combines secure authentication, Gmail-assisted application import, status-history tracking, advanced application analytics, company insights, and an actionable follow-up workspace. Gemini-assisted resume and cover-letter workflows are next in Phase 11; Docker and Render deployment remain part of the Phase 12 release work.
+> **Project status:** Phase 10 is complete. JobTrackr now combines secure authentication, Gmail-assisted application import, status-history tracking, advanced application analytics, company insights, and an actionable follow-up workspace. Gemini-assisted workflows have been deferred to V2. Phase 12—Docker, Render deployment, final QA, documentation, and the V1.0 release—is next.
 
 ## Features
 
@@ -298,8 +298,8 @@ For a future production hardening pass, token storage can move from browser loca
 | 8     | Gmail connection and permission management                        | Complete |
 | 9     | Workday-email detection, import review, and deduplication          | Complete |
 | 10    | Advanced company and application analytics                        | Complete |
-| 11    | Gemini-assisted resume and cover-letter workflows                 | Next     |
-| 12    | Docker, Render deployment, final QA, documentation, and V1 release | Planned  |
+| 11    | Gemini-assisted resume and cover-letter workflows                 | Deferred (V2) |
+| 12    | Docker, Render deployment, final QA, documentation, and V1 release | Next     |
 
 ### Phase Closeout Checklist
 
@@ -312,10 +312,10 @@ Every phase is complete only after:
 
 ## Planned Improvements
 
+The following improvements are outside the V1.0 release scope and are candidates for V2:
+
 - Broader provider-specific email detection rules based on real-world opt-in feedback
 - Gemini-assisted resume and cover-letter generation with user review
 - Exportable analytics and configurable follow-up reminder windows
-- Dockerfiles, Docker Compose, and cost-conscious Render deployment configuration
-- Hosted application screenshot and deployment link
 - End-to-end browser tests for production-critical workflows
 - Optional refresh-token rotation and password-reset workflow
