@@ -62,13 +62,34 @@ jobs:
         run: npm ci
 
       - name: Check frontend formatting
-        run: npx prettier --check "src/**/*.{ts,html,scss}" "angular.json" "package.json" "tsconfig*.json" "../.github/workflows/*.yml"
+        run: npx prettier --check "src/**/*.{ts,html,scss}" "public/**/*.js" "scripts/**/*.mjs" "angular.json" "package.json" "tsconfig*.json" "../compose.yaml" "../render.yaml" "../.github/workflows/*.yml"
+
+      - name: Validate runtime configuration
+        run: npm run config:check
 
       - name: Run frontend tests
         run: npm test -- --watch=false
 
       - name: Build frontend for production
         run: npm run build
+
+  containers:
+    name: Container configuration and builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose configuration
+        run: docker compose --file compose.yaml config --quiet
+
+      - name: Build backend image
+        run: docker build --file Backend/jobtrackr/Dockerfile --tag jobtrackr-backend:ci Backend/jobtrackr
+
+      - name: Build frontend image
+        run: docker build --file Frontend/Dockerfile --tag jobtrackr-frontend:ci Frontend
 
   dependency-review:
     name: Dependency security review
