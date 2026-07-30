@@ -13,16 +13,21 @@ without Google configuration.
 
 ## V1 Availability
 
-The public V1 Render demo will not be configured with Google credentials.
-Visitors can register with email and password and use all core tracking and
-analytics features.
+The public V1 Render deployment uses a dedicated production Google Cloud
+project for basic Google Sign-In. Visitors can sign in with their own Google
+account without supplying credentials. The deployment stores only the public
+Google client ID in the backend environment; it does not use a browser client
+secret.
 
-The interface will identify Gmail import as a self-hosted feature and direct
-developers to this guide. Users must never enter their OAuth client secret into
+Gmail import remains a self-hosted V1 feature. The hosted interface labels it
+as **Self-hosted**, explains why it is unavailable, and links to this guide.
+Visitors must never enter an OAuth client secret or token-encryption key into
 the hosted browser application.
 
-Developers who clone or fork JobTrackr can enable Google services using their
-own Google Cloud project and local environment variables.
+Developers who clone or fork JobTrackr can enable Gmail import using their own
+Google Cloud testing project and backend environment variables. Password
+authentication and manual application tracking continue to work when either
+Google capability is disabled.
 
 ## Credential Model
 
@@ -46,12 +51,12 @@ the application and configure its environment.
 For local V1 development, one testing project can contain separate web clients
 for Google Sign-In and the Gmail server flow.
 
-For a future public release, use separate projects:
+For the public V1 deployment, use separate projects:
 
 - a production project requesting only basic identity scopes for public Google
   Sign-In;
-- a separate Gmail integration project while restricted-scope verification is
-  completed.
+- a separate testing project for self-hosted Gmail import while
+  restricted-scope verification is incomplete.
 
 Publishing status and consent-screen scopes apply at the Google Cloud project
 level, not merely to one client ID. Separating projects prevents a restricted
@@ -93,6 +98,11 @@ Gmail scope from complicating basic public sign-in.
 
 Google Sign-In uses the Google Identity Services callback flow. It does not
 require a client secret or redirect URI in the V1 implementation.
+
+For the hosted Render frontend, add its exact HTTPS origin to the production
+client's **Authorized JavaScript origins** and set `GOOGLE_CLIENT_ID` in the
+backend Render service. Do not configure Gmail scopes in this production
+sign-in project.
 
 The backend publishes only this safe configuration:
 
@@ -215,9 +225,11 @@ credentials or a private Workday API.
 
 Remove the Google environment variables and restart the backend.
 
-Password authentication and manual application tracking remain available. The
-backend reports the integrations as unconfigured, and the frontend must show the
-public-demo/self-hosted state.
+Password authentication and manual application tracking remain available.
+Without `GOOGLE_CLIENT_ID`, the login and registration screens omit Google
+Sign-In. Without the Gmail variables, the sidebar, import screen, and Settings
+show the self-hosted Gmail state and link to this guide instead of starting a
+broken OAuth flow.
 
 ## Troubleshooting
 
