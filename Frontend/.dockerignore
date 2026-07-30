@@ -1,0 +1,8 @@
+.angular
+.git
+.gitignore
+dist
+node_modules
+*.log
+.env
+.env.*

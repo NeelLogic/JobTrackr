@@ -1,0 +1,8 @@
+.metadata
+.git
+.gitignore
+target
+*.log
+application-local.properties
+.env
+.env.*
