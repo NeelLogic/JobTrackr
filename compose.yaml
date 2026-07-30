@@ -1,0 +1,84 @@
+name: jobtrackr
+
+services:
+  database:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: jobtrackr_db
+      MYSQL_USER: jobtrackr
+      MYSQL_PASSWORD: ${DOCKER_DB_PASSWORD:-jobtrackr-local-password-change-me}
+      MYSQL_ROOT_PASSWORD: ${DOCKER_DB_ROOT_PASSWORD:-jobtrackr-local-root-password-change-me}
+    volumes:
+      - jobtrackr_mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping --host=127.0.0.1 --user=root --password=$${MYSQL_ROOT_PASSWORD} --silent",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - jobtrackr_internal
+
+  backend:
+    build:
+      context: Backend/jobtrackr
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      DB_URL: jdbc:mysql://database:3306/jobtrackr_db?serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: jobtrackr
+      DB_PASSWORD: ${DOCKER_DB_PASSWORD:-jobtrackr-local-password-change-me}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
+      JWT_SECRET: ${JWT_SECRET:-local-docker-jwt-secret-change-before-any-deployment}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_GMAIL_CLIENT_ID: ${GOOGLE_GMAIL_CLIENT_ID:-}
+      GOOGLE_GMAIL_CLIENT_SECRET: ${GOOGLE_GMAIL_CLIENT_SECRET:-}
+      GMAIL_TOKEN_ENCRYPTION_KEY: ${GMAIL_TOKEN_ENCRYPTION_KEY:-}
+      GOOGLE_GMAIL_REDIRECT_URI: ${GOOGLE_GMAIL_REDIRECT_URI:-http://localhost:8080/api/integrations/gmail/callback}
+      GMAIL_FRONTEND_CALLBACK_URL: ${GMAIL_FRONTEND_CALLBACK_URL:-http://localhost:4200/settings}
+      GMAIL_OAUTH_STATE_TTL: ${GMAIL_OAUTH_STATE_TTL:-10m}
+      GMAIL_IMPORT_LOOKBACK_DAYS: ${GMAIL_IMPORT_LOOKBACK_DAYS:-180}
+      GMAIL_IMPORT_MAX_MESSAGES: ${GMAIL_IMPORT_MAX_MESSAGES:-100}
+    ports:
+      - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    networks:
+      - jobtrackr_internal
+
+  frontend:
+    build:
+      context: Frontend
+      dockerfile: Dockerfile
+      args:
+        JOBTRACKR_API_URL: /api
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - jobtrackr_internal
+
+volumes:
+  jobtrackr_mysql_data:
+
+networks:
+  jobtrackr_internal:
+    driver: bridge

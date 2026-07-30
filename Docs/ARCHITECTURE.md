@@ -21,7 +21,9 @@ and persistence. MySQL is the system of record.
 
 Google integrations are optional. When their environment variables are absent,
 password authentication and all manual job-tracking features continue to work.
-The V1 public demo is intended to run in this configuration.
+The public V1 deployment enables basic Google Sign-In through a dedicated
+production client ID. Restricted-scope Gmail import remains self-hosted and is
+disabled automatically when its backend credentials are absent.
 
 ## Repository Layout
 
@@ -31,6 +33,8 @@ JobTrackr/
 |-- Frontend/                Angular application and Vitest tests
 |-- Docs/                    Architecture, deployment, and integration guides
 |-- .github/workflows/       GitHub Actions continuous integration
+|-- compose.yaml             Local container topology
+|-- render.yaml              Render infrastructure blueprint
 `-- README.md                Project overview and quick start
 ```
 
@@ -258,8 +262,17 @@ user-owned records.
 - CORS accepts only explicitly configured frontend origins.
 - External credentials and encryption keys are supplied through environment
   variables.
+- Multi-stage builds keep Maven, the JDK, Node.js, and source files out of the
+  runtime images.
+- The backend runs as a non-root Linux user; Nginx serves the optimized Angular
+  artifact and proxies `/api` only inside the local Compose network.
+- Docker Compose waits for MySQL and backend health before starting dependent
+  services and persists database files in a named volume.
+- Render runs the Angular artifact as a static site, Spring Boot as a
+  Docker-based web service, and MySQL as a private service with a persistent
+  disk.
 - GitHub Actions builds and tests both applications on pull requests and pushes
-  to `main`.
+  to `main`, validates Compose, and builds both production images.
 
 The planned V1 deployment topology and operational checklist are documented in
 [DEPLOYMENT.md](DEPLOYMENT.md).
@@ -273,5 +286,7 @@ The planned V1 deployment topology and operational checklist are documented in
 | Stateless JWT authentication                 | Simple SPA/API deployment                                        | V1 stores the token in browser storage; secure refresh cookies are a future hardening option |
 | User-scoped repository queries               | Prevents cross-account record access                             | Every new query must preserve the ownership constraint                                       |
 | Review-before-import Gmail flow              | Keeps users in control of inferred data                          | Adds a review step                                                                           |
-| Optional Google configuration                | Public V1 can launch without restricted-scope verification       | Public-demo users use password authentication and manual entry                               |
+| Separate Google Sign-In and Gmail configuration | Public identity can launch without restricted-scope verification | Gmail import remains self-hosted until verification is complete                              |
+| Build-time frontend API configuration        | One Angular artifact pattern supports local and hosted backends  | A changed hosted API URL requires rebuilding the static site                                 |
+| Private MySQL container with persistent disk | Preserves the required database stack and private networking      | Render MySQL storage requires a paid private service                                         |
 | No direct Workday credentials or private API | Avoids brittle automation and credential risk                    | Detection depends on application-related emails                                              |

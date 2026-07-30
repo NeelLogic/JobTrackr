@@ -1,78 +1,216 @@
 # JobTrackr Deployment Guide
 
-This document defines the V1 deployment target for JobTrackr on Render.
+This document defines the V1 container and Render deployment workflow.
 
-> **Current status:** Render deployment is part of the final V1 phase. The
-> Dockerfiles, Compose configuration, Render Blueprint, live URLs, and final
-> production verification must be completed before this guide is marked
-> operational.
+> **Current status:** The backend and frontend images, Docker Compose stack,
+> health checks, Flyway migrations, Nginx proxy, Angular route fallback, and
+> MySQL persistence have been verified locally. `render.yaml` defines the
+> hosted infrastructure, but it has not been applied. No paid Render resource
+> has been created.
 
 ## V1 Deployment Profile
 
-The public V1 demo will support password registration, login, manual application
-tracking, analytics, companies, and follow-ups. Google Sign-In and Gmail import
-will not receive credentials in the public Render environment. They remain
-optional self-hosted integrations documented in
-[GOOGLE_INTEGRATION.md](GOOGLE_INTEGRATION.md).
+The public V1 deployment supports:
 
-The target topology is:
+- password registration and authentication;
+- Google Sign-In through a JobTrackr-owned production client ID;
+- manual application management;
+- dashboard, analytics, companies, and follow-up workflows.
+
+Gmail import remains an optional self-hosted feature because
+`gmail.readonly` is a restricted Google scope. The public backend intentionally
+omits Gmail client credentials and token-encryption keys. The frontend detects
+this state and displays the self-hosted explanation.
+
+The hosted topology is:
 
 ```mermaid
 flowchart TB
     USER["Browser"] -->|"HTTPS"| FRONTEND["Render static site<br/>Angular"]
-    FRONTEND -->|"HTTPS / JSON"| BACKEND["Render web service<br/>Spring Boot Docker image"]
-    BACKEND -->|"Private network / JDBC"| MYSQL["Render private service<br/>MySQL 8 + persistent disk"]
-    GITHUB["GitHub main branch"] -->|"Checks pass / deploy"| FRONTEND
-    GITHUB -->|"Checks pass / deploy"| BACKEND
+    FRONTEND -->|"HTTPS / JSON"| BACKEND["Render web service<br/>Spring Boot container"]
+    BACKEND -->|"Private JDBC"| MYSQL["Render private service<br/>MySQL 8.4 + disk"]
+    GITHUB["GitHub main"] -->|"Deploy after checks pass"| FRONTEND
+    GITHUB -->|"Deploy after checks pass"| BACKEND
 ```
 
-The database must not be publicly exposed. Render documents MySQL as a private
-service with its persistent disk mounted at `/var/lib/mysql`. Persistent disks
-are available on paid services, so this topology is cost-conscious but not
-guaranteed to be free.
+The local container topology uses Nginx at `http://localhost:4200`. Nginx
+proxies `/api` to Spring Boot over an internal Docker network. MySQL is not
+published to the host.
 
-## Prerequisites
+## Cost and Safety
 
-- A GitHub account with access to the JobTrackr repository
-- A Render account connected to GitHub
-- A clean, passing `main` branch
-- Production Docker and frontend builds verified locally
-- Secure production secrets generated before deployment
-- A decision on the Render region; keep the backend and MySQL in the same region
+Creating or editing the Dockerfiles and Blueprint costs nothing.
 
-Never commit production credentials, paste them into screenshots, or add them to
-Docker build arguments.
+Applying `render.yaml` creates:
+
+- a free static site;
+- a free web-service instance for the API, subject to Render's current free-tier
+  limits;
+- a paid private MySQL service with a 10 GB persistent disk.
+
+Render private services do not support the free plan, and persistent disks are
+paid resources. Review the price shown by Render before applying the Blueprint.
+Deleting containers locally does not affect Render, and deleting Render
+resources does not remove local Docker data.
+
+Never commit production credentials, paste them into screenshots, or use them
+as Docker build arguments.
+
+## Local Docker Workflow
+
+### Prerequisites
+
+- Docker Desktop using Linux containers
+- Docker Compose v2
+- a repository-root `.env` copied from `.env.example`
+
+### Start the stack
+
+```powershell
+docker compose up --build
+```
+
+Services:
+
+| Service    | Local access                     | Notes                                      |
+| ---------- | -------------------------------- | ------------------------------------------ |
+| Frontend   | `http://localhost:4200`          | Nginx, Angular routing, and `/api` proxy   |
+| Backend    | `http://localhost:8080`          | Direct API access for diagnostics          |
+| MySQL      | Docker network only              | Non-root application user and named volume |
+| API health | `http://localhost:8080/api/health` | Returns `{"status":"UP"}`                |
+
+Inspect health:
+
+```powershell
+docker compose ps
+Invoke-RestMethod http://localhost:4200/api/health
+```
+
+Stop containers while preserving the database:
+
+```powershell
+docker compose down
+```
+
+Delete the local Docker database only when a clean environment is intentional:
+
+```powershell
+docker compose down --volumes
+```
+
+The `jobtrackr_mysql_data` volume is separate from MySQL installed directly on
+Windows.
+
+### Local verification baseline
+
+The release stack has been verified for:
+
+- clean backend and frontend image builds;
+- non-root Spring Boot runtime;
+- MySQL health before backend startup;
+- backend health before frontend startup;
+- all five Flyway migrations from an empty MySQL database;
+- frontend-to-backend requests through Nginx;
+- Angular deep-link refresh;
+- database persistence after stopping and restarting all containers.
+
+## Container Design
+
+### Backend image
+
+`Backend/jobtrackr/Dockerfile` uses a Maven/Java 21 build stage and a Java 21 JRE
+runtime stage. The runtime image:
+
+- contains only the packaged application and JRE;
+- runs as the non-root `jobtrackr` user;
+- limits JVM memory relative to the container;
+- supports graceful Spring shutdown;
+- binds to `PORT`, defaulting to `8080`;
+- exposes `/api/health` through a Docker health check.
+
+### Frontend image
+
+`Frontend/Dockerfile` uses Node 22 to build Angular and Nginx to serve the
+optimized artifact. Nginx:
+
+- falls back to `index.html` for Angular routes;
+- proxies `/api` to the backend container;
+- applies basic response security headers;
+- caches hashed assets and prevents caching of `config.js`;
+- exposes its own health check.
+
+`JOBTRACKR_API_URL` generates the public frontend configuration during the
+build. It accepts only an HTTP(S) URL or a root-relative path. It is not a place
+for secrets.
+
+## Render Blueprint
+
+The repository-root `render.yaml` defines:
+
+| Service name                    | Type                | Region |
+| ------------------------------- | ------------------- | ------ |
+| `jobtrackr-neellogic`           | Angular static site | CDN    |
+| `jobtrackr-api-neellogic`       | Docker web service  | Ohio   |
+| `jobtrackr-mysql-neellogic`     | Private MySQL 8.4   | Ohio   |
+
+The expected public URLs are:
+
+```text
+https://jobtrackr-neellogic.onrender.com
+https://jobtrackr-api-neellogic.onrender.com
+```
+
+If Render requires different service names, update all affected values before
+deployment:
+
+- backend `DB_URL`;
+- backend `CORS_ALLOWED_ORIGINS`;
+- frontend `JOBTRACKR_API_URL`;
+- Google authorized JavaScript origin.
+
+The API and frontend deploy from `main` only after linked GitHub checks pass.
+MySQL is pulled from the official `mysql:8.4` image and is not publicly
+accessible.
 
 ## Required Production Configuration
 
-### Backend variables
+### Backend
 
-| Variable               | Required | Production value                                                   |
-| ---------------------- | -------- | ------------------------------------------------------------------ |
-| `DB_URL`               | Yes      | JDBC URL using the private MySQL hostname and port                 |
-| `DB_USERNAME`          | Yes      | Dedicated non-root JobTrackr database user                         |
-| `DB_PASSWORD`          | Yes      | Strong database password                                           |
-| `DB_POOL_SIZE`         | No       | Start with `10`; tune only with evidence                           |
-| `JWT_SECRET`           | Yes      | Random value containing at least 32 bytes of entropy               |
-| `JWT_EXPIRATION_MS`    | No       | Defaults to `86400000`                                             |
-| `CORS_ALLOWED_ORIGINS` | Yes      | Exact HTTPS frontend origin                                        |
-| `PORT`                 | Render   | Render-provided service port; Phase 12 must bind Spring Boot to it |
+| Variable               | Source                                                     |
+| ---------------------- | ---------------------------------------------------------- |
+| `PORT`                 | Blueprint value `10000`                                    |
+| `DB_URL`               | Private MySQL hostname in the Blueprint                    |
+| `DB_USERNAME`          | Dedicated `jobtrackr` account                              |
+| `DB_PASSWORD`          | Generated MySQL service value referenced by the API        |
+| `DB_POOL_SIZE`         | `5` for the small V1 service                               |
+| `JWT_SECRET`           | Render-generated random value                              |
+| `JWT_EXPIRATION_MS`    | `86400000`                                                  |
+| `CORS_ALLOWED_ORIGINS` | Exact frontend HTTPS origin                                |
+| `GOOGLE_CLIENT_ID`     | Public production Google Sign-In client ID, entered in Render |
 
-The JDBC URL will follow this shape:
+### Frontend
+
+| Variable             | Value                                                    |
+| -------------------- | -------------------------------------------------------- |
+| `NODE_VERSION`       | `22`                                                     |
+| `JOBTRACKR_API_URL`  | Exact backend HTTPS URL followed by `/api`               |
+
+### MySQL
+
+| Variable               | Source                         |
+| ---------------------- | ------------------------------ |
+| `MYSQL_DATABASE`       | `jobtrackr_db`                 |
+| `MYSQL_USER`           | `jobtrackr`                    |
+| `MYSQL_PASSWORD`       | Render-generated random value  |
+| `MYSQL_ROOT_PASSWORD`  | Separate Render-generated value |
+
+The persistent disk must remain mounted at `/var/lib/mysql`.
+
+### Gmail variables
+
+Do not set these in the public V1 environment:
 
 ```text
-jdbc:mysql://INTERNAL_MYSQL_HOST:3306/jobtrackr_db?serverTimezone=UTC
-```
-
-Use the actual internal hostname shown by Render. Do not use `localhost` from
-the backend service.
-
-### Google variables
-
-Leave these unset in the public V1 deployment:
-
-```text
-GOOGLE_CLIENT_ID
 GOOGLE_GMAIL_CLIENT_ID
 GOOGLE_GMAIL_CLIENT_SECRET
 GMAIL_TOKEN_ENCRYPTION_KEY
@@ -80,179 +218,117 @@ GOOGLE_GMAIL_REDIRECT_URI
 GMAIL_FRONTEND_CALLBACK_URL
 ```
 
-The application must present Google services as optional self-hosted features
-when they are unconfigured. Public users must never be asked to enter OAuth
-client secrets into the hosted frontend.
+## Deployment Sequence
 
-### Generate secrets in PowerShell
+### 1. Confirm the release branch
 
-Generate a JWT secret:
+Before provisioning anything:
 
 ```powershell
-$jwtBytes = New-Object byte[] 48
-$jwtRng = [Security.Cryptography.RandomNumberGenerator]::Create()
-$jwtRng.GetBytes($jwtBytes)
-$jwtRng.Dispose()
-[Convert]::ToBase64String($jwtBytes)
-```
+git switch main
+git pull --ff-only
 
-Generate database passwords separately with a trusted password manager. Do not
-reuse the JWT secret as a database password.
-
-## Local Release Validation
-
-The final release must pass the normal builds:
-
-```powershell
 cd Backend\jobtrackr
 .\mvnw.cmd --batch-mode --no-transfer-progress verify
 
 cd ..\..\Frontend
 npm ci
+npm run config:check
 npm test -- --watch=false
 npm run build
+
+cd ..
+docker compose config --quiet
+docker compose build
 ```
 
-Phase 12 will add Docker commands to this section after the Dockerfiles and
-Compose file exist. At minimum, the validation must demonstrate:
+### 2. Create the Render Blueprint
 
-- backend image build and startup;
-- frontend image or static production artifact build;
-- MySQL startup with persistent local volume;
-- Flyway migrations from an empty database;
-- frontend-to-backend requests;
-- container restart without data loss.
+1. Sign in to Render and connect the `NeelLogic/JobTrackr` repository.
+2. Select **New > Blueprint**.
+3. Choose the repository and the root `render.yaml`.
+4. Confirm the Ohio region for the API and MySQL.
+5. Review the paid MySQL private-service and disk price.
+6. Supply `GOOGLE_CLIENT_ID` when Render requests the unsynced value.
+7. Apply the Blueprint only after accepting the displayed cost.
 
-## Render Deployment Sequence
+### 3. Verify service configuration
 
-### 1. Deploy MySQL
+Confirm:
 
-Create a MySQL 8 private service based on Render's supported MySQL deployment
-pattern.
+- MySQL is private and its disk mount is `/var/lib/mysql`;
+- the API health path is `/api/health`;
+- the API has no Gmail environment variables;
+- the frontend API URL matches the actual backend URL;
+- CORS contains only the actual frontend origin;
+- automatic deployment waits for GitHub checks.
 
-Set:
+### 4. Update Google Sign-In
+
+In the production Google Cloud project, add the deployed frontend URL under
+**Authorized JavaScript origins**:
 
 ```text
-MYSQL_DATABASE=jobtrackr_db
-MYSQL_USER=jobtrackr
-MYSQL_PASSWORD=<generated secret>
-MYSQL_ROOT_PASSWORD=<different generated secret>
+https://jobtrackr-neellogic.onrender.com
 ```
 
-Attach a persistent disk:
-
-```text
-Mount path: /var/lib/mysql
-```
-
-Only the backend should connect to the database over Render's private network.
-Use `mysqldump` for database backups; a disk snapshot alone is not a
-database-consistent backup strategy.
-
-### 2. Deploy the backend
-
-Create a Docker-based Render web service from the repository. Phase 12 will add
-the exact monorepo Dockerfile path to this guide.
-
-Configure:
-
-- the backend environment variables listed above;
-- the backend's region to match MySQL;
-- `/api/health` as the HTTP health-check path;
-- automatic deployment only after required GitHub checks pass, where supported;
-- no Google environment variables for the public V1 demo.
-
-The deployed backend must return a successful response from:
-
-```text
-https://BACKEND_HOST/api/health
-```
-
-### 3. Deploy the frontend
-
-Create a Render static site with:
-
-```text
-Root directory: Frontend
-Build command: npm ci && npm run build
-Publish directory: dist/jobtrackr/browser
-```
-
-The production Angular build must use the deployed backend URL. The current
-development configuration uses `/api`; Phase 12 must add the final production
-configuration before deployment.
-
-Add a rewrite for Angular client-side routes:
-
-```text
-Source: /*
-Destination: /index.html
-Action: Rewrite
-```
-
-### 4. Finalize CORS
-
-Set `CORS_ALLOWED_ORIGINS` on the backend to the exact frontend URL:
-
-```text
-https://FRONTEND_HOST
-```
-
-Do not use `*` with authenticated production endpoints.
+Use the actual Render URL if the service name changed. Google Sign-In uses only
+the public browser client ID; do not add a client secret to Angular.
 
 ### 5. Verify production
 
-Complete the following checks using a new test account:
+Using fresh accounts:
 
-- register, log in, log out, and log back in;
-- create, view, edit, and delete an application;
-- verify search, filters, sorting, and pagination;
-- change statuses and confirm status history;
+- register, sign in, sign out, and sign back in;
+- sign in with Google and link Google to an authenticated password account;
+- create, view, edit, search, filter, sort, paginate, and delete applications;
+- change statuses and verify history-dependent analytics;
 - verify dashboard, analytics, companies, and follow-ups;
 - confirm another account cannot access the first account's data;
 - confirm invalid and unauthorized requests return safe errors;
-- confirm Google features display the self-hosted explanation;
-- confirm browser refresh works on every Angular route;
+- confirm Gmail displays the self-hosted explanation;
+- refresh every Angular route directly;
 - confirm `/api/health` is healthy;
-- restart services and verify database records remain;
+- restart the API and verify database records remain;
 - inspect browser and server logs for secrets or stack traces.
 
-## Deployment Safety Checklist
+## Backup and Recovery
 
-Before making the live-demo link public:
+Use `mysqldump` for database-consistent backups. A persistent-disk snapshot alone
+is not a safe MySQL backup strategy.
+
+- Back up before any material schema or data migration.
+- Restore into a separate database first and validate it.
+- Never edit or remove a Flyway migration that has reached production.
+- Keep the previous successful Render deployment available for rollback.
+- Rotate exposed secrets immediately and invalidate affected sessions or OAuth
+  connections.
+
+## Release Checklist
 
 - [ ] GitHub Actions passes on the release commit
-- [ ] Backend and frontend production builds pass locally
-- [ ] Docker Compose passes from a clean database
+- [ ] Backend tests and executable JAR build pass
+- [ ] Frontend configuration tests, Angular tests, and build pass
+- [ ] Both Docker images build
+- [ ] Docker Compose starts from a clean database
+- [ ] Flyway migrations complete
+- [ ] Restart persistence test passes
 - [ ] No secret appears in Git history or tracked files
-- [ ] MySQL uses a non-root application account
-- [ ] MySQL is private and has persistent storage
-- [ ] Database backup and restore commands are documented and tested
-- [ ] `JWT_SECRET` is production-only and randomly generated
+- [ ] MySQL is private and uses persistent storage
+- [ ] Backup and restore procedure is verified
+- [ ] JWT secret is generated only in Render
 - [ ] CORS contains only the deployed frontend origin
-- [ ] Google credentials are absent from the public V1 environment
-- [ ] Health checks and service logs are clean
-- [ ] Authentication and user-data isolation are manually verified
-- [ ] README contains the correct live-demo URL and limitations
-- [ ] A `v1.0.0` tag is created only after verification
+- [ ] Production Google client has the exact frontend origin
+- [ ] Gmail credentials are absent from the public environment
+- [ ] README contains the final live-demo URL
+- [ ] A `v1.0.0` tag is created only after final verification
 
-## Rollback and Recovery
-
-- Keep the previous successful Render deployment available for rollback.
-- Do not rewrite or delete an existing Flyway migration after it has reached
-  production; add a new forward migration.
-- Back up MySQL using `mysqldump` before a migration with material data risk.
-- Restore into a separate database first and validate it before replacing a
-  production database.
-- Rotate any secret immediately if it is exposed, then invalidate affected
-  sessions or OAuth connections.
-
-## Render References
+## Official References
 
 - [Docker on Render](https://render.com/docs/docker)
+- [Render Blueprints](https://render.com/docs/blueprint-spec)
 - [Environment variables and secrets](https://render.com/docs/configure-environment-variables)
 - [Deploy MySQL](https://render.com/docs/deploy-mysql)
 - [Persistent disks](https://render.com/docs/disks)
-- [Static-site redirects and rewrites](https://render.com/docs/redirects-rewrites)
+- [Static sites](https://render.com/docs/static-sites)
 - [Health checks](https://render.com/docs/health-checks)
-- [Blueprint specification](https://render.com/docs/blueprint-spec)

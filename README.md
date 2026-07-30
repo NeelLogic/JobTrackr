@@ -4,7 +4,7 @@
 
 JobTrackr is a full-stack job application tracker for students and new graduates. It provides a secure, user-specific workspace for organizing opportunities, following application progress, and understanding job-search activity.
 
-> **Project status:** Phase 12 is in progress. JobTrackr now combines secure authentication, Gmail-assisted application import, status-history tracking, advanced application analytics, company insights, and an actionable follow-up workspace. The public V1 deployment will provide Google Sign-In while keeping restricted-scope Gmail import as an optional self-hosted feature. Gemini-assisted workflows remain deferred to V2.
+> **Project status:** Phase 12 is in progress. The complete application now runs locally as production-style Docker containers with Nginx, Spring Boot, and persistent MySQL. Render infrastructure is defined but has not been provisioned, so no paid resources have been created. The public V1 deployment will provide Google Sign-In while keeping restricted-scope Gmail import as an optional self-hosted feature. Gemini-assisted workflows remain deferred to V2.
 
 ## Features
 
@@ -31,6 +31,9 @@ JobTrackr is a full-stack job application tracker for students and new graduates
 - Application status history recorded for every new application and subsequent status transition
 - Sectioned workspace navigation for overview, tracking, integrations, and account management
 - Responsive layouts, keyboard navigation, accessible form errors, and loading, empty, and error states
+- Multi-stage production containers with a non-root backend runtime and health checks
+- Docker Compose orchestration with private networking and persistent MySQL storage
+- Render Blueprint configuration with checks-gated deployments and environment-managed secrets
 
 ## Tech Stack
 
@@ -41,8 +44,8 @@ JobTrackr is a full-stack job application tracker for students and new graduates
 | Database           | MySQL, Flyway migrations; H2 for automated tests                            |
 | Authentication     | BCrypt, Google Identity Services, OAuth 2.0, JWT, AES-256-GCM token storage |
 | Testing            | JUnit 5, Spring Boot Test, Spring Security Test, Vitest                     |
-| Tooling            | Maven Wrapper, npm, Git, GitHub Actions                                     |
-| Deployment         | Docker and Render                                                           |
+| Tooling            | Maven Wrapper, npm, Git, GitHub Actions, Docker Compose                     |
+| Deployment         | Docker, Nginx, Render Blueprint                                             |
 
 ## Architecture
 
@@ -73,6 +76,8 @@ JobTrackr/
 |-- Docs/                    Architecture, deployment, security, and integration guides
 |-- .github/workflows/       Continuous integration
 |-- .env.example             Safe local environment-variable template
+|-- compose.yaml             Local full-stack container orchestration
+|-- render.yaml              Render infrastructure blueprint
 `-- README.md
 ```
 
@@ -120,6 +125,7 @@ Migration V5 creates a baseline history entry for applications that existed befo
 - Java 21 or newer
 - Node.js 22 and npm 10
 - MySQL 8
+- Docker Desktop with Docker Compose for the container workflow
 
 ### 1. Start MySQL
 
@@ -168,6 +174,35 @@ npm run dev
 The `dev` command loads the repository-root `.env` file and starts both Spring
 Boot and Angular. Use the separate commands above when you need to restart or
 debug one process independently.
+
+### Run the production-style Docker stack
+
+Copy the safe environment template once and replace the local placeholders:
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
+
+Open `http://localhost:4200`. Nginx serves the Angular production build and
+proxies `/api` to the private backend container. The backend waits for MySQL to
+be healthy, Flyway applies the schema, and database data persists in the named
+`jobtrackr_mysql_data` volume.
+
+Stop the services without deleting data:
+
+```powershell
+docker compose down
+```
+
+Delete the local Docker database only when you intentionally want a clean
+environment:
+
+```powershell
+docker compose down --volumes
+```
+
+This volume is separate from a MySQL installation running directly on Windows.
 
 ### Google Sign-In setup
 
@@ -241,6 +276,7 @@ The default scan examines at most 100 matching messages from the previous 180 da
 | `DB_USERNAME`                | No                    | `jobtrackr`                                  | Database username                                             |
 | `DB_PASSWORD`                | Yes                   | None                                         | Database password                                             |
 | `DB_POOL_SIZE`               | No                    | `10`                                         | Maximum connection-pool size                                  |
+| `PORT`                       | No                    | `8080`                                       | Backend HTTP port; Render supplies its service port            |
 | `JWT_SECRET`                 | Yes                   | None                                         | JWT signing secret; use at least 32 random characters         |
 | `JWT_EXPIRATION_MS`          | No                    | `86400000`                                   | Token lifetime in milliseconds                                |
 | `CORS_ALLOWED_ORIGINS`       | No                    | `http://localhost:4200`                      | Comma-separated allowed frontend origins                      |
@@ -253,6 +289,9 @@ The default scan examines at most 100 matching messages from the previous 180 da
 | `GMAIL_OAUTH_STATE_TTL`      | No                    | `10m`                                        | Lifetime of a single-use Gmail OAuth state                    |
 | `GMAIL_IMPORT_LOOKBACK_DAYS` | No                    | `180`                                        | Recent Gmail window; backend limits the value to 1–365 days   |
 | `GMAIL_IMPORT_MAX_MESSAGES`  | No                    | `100`                                        | Maximum messages per scan; backend limits the value to 1–100  |
+| `JOBTRACKR_API_URL`          | Frontend build        | `/api`                                       | Public API base URL embedded in the generated frontend config |
+| `DOCKER_DB_PASSWORD`         | Docker only           | Local development value                      | Non-root MySQL password used by Docker Compose                |
+| `DOCKER_DB_ROOT_PASSWORD`    | Docker only           | Local development value                      | MySQL root password used only by the local container          |
 
 Never commit real credentials or production secrets. Configure them through local environment variables and, for deployment, the Render environment settings. The Google client ID is public configuration, but it remains environment-specific and is not hard-coded into the Angular application.
 
@@ -269,6 +308,7 @@ Run the frontend tests and production build:
 
 ```powershell
 cd Frontend
+npm run config:check
 npm test -- --watch=false
 npm run build
 ```
@@ -277,13 +317,16 @@ Current Phase 12 baseline:
 
 - 58 backend tests covering password and Google authentication, Gmail configuration, token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, status history, analytics calculations, follow-up classification, authorization, validation, user data isolation, services, JWT behavior, and API integration
 - 79 frontend tests covering API services, route guards, password and Google authentication, Gmail availability and connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, application workflows, and navigation
+- 4 Node tests covering safe frontend runtime API configuration and JavaScript-string escaping
+- Local container verification covering image builds, health checks, Flyway migrations, Nginx proxying, Angular deep links, and MySQL persistence across a full restart
 
 ## Continuous Integration
 
 GitHub Actions runs on every pull request to `main` and every push to `main`:
 
 - Backend tests and executable JAR build
-- Frontend formatting check, tests, and production build
+- Frontend formatting, runtime-config validation, tests, and production build
+- Docker Compose validation and backend/frontend image builds
 - Pull-request dependency security review
 
 Merges should only proceed after all required checks pass.
