@@ -268,9 +268,10 @@ user-owned records.
   artifact and proxies `/api` only inside the local Compose network.
 - Docker Compose waits for MySQL and backend health before starting dependent
   services and persists database files in a named volume.
-- Render runs the Angular artifact as a static site, Spring Boot as a
-  Docker-based web service, and MySQL as a private service with a persistent
-  disk.
+- Render runs the Angular artifact as a static site and Spring Boot as a
+  Docker-based web service. The hosted demo connects over TLS to an external
+  Aiven free MySQL service; local Docker Compose keeps MySQL on its private
+  container network.
 - GitHub Actions builds and tests both applications on pull requests and pushes
   to `main`, validates Compose, and builds both production images.
 
@@ -279,14 +280,14 @@ The planned V1 deployment topology and operational checklist are documented in
 
 ## Key Decisions and Trade-offs
 
-| Decision                                     | Reason                                                           | Trade-off                                                                                    |
-| -------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Spring Boot layered architecture             | Clear ownership and testable business logic                      | More mapping code than exposing entities directly                                            |
-| MySQL with Flyway                            | Matches the project stack and provides repeatable schema changes | Requires managed backups and persistent hosting                                              |
-| Stateless JWT authentication                 | Simple SPA/API deployment                                        | V1 stores the token in browser storage; secure refresh cookies are a future hardening option |
-| User-scoped repository queries               | Prevents cross-account record access                             | Every new query must preserve the ownership constraint                                       |
-| Review-before-import Gmail flow              | Keeps users in control of inferred data                          | Adds a review step                                                                           |
+| Decision                                        | Reason                                                           | Trade-off                                                                                    |
+| ----------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Spring Boot layered architecture                | Clear ownership and testable business logic                      | More mapping code than exposing entities directly                                            |
+| MySQL with Flyway                               | Matches the project stack and provides repeatable schema changes | Requires managed backups and persistent hosting                                              |
+| Stateless JWT authentication                    | Simple SPA/API deployment                                        | V1 stores the token in browser storage; secure refresh cookies are a future hardening option |
+| User-scoped repository queries                  | Prevents cross-account record access                             | Every new query must preserve the ownership constraint                                       |
+| Review-before-import Gmail flow                 | Keeps users in control of inferred data                          | Adds a review step                                                                           |
 | Separate Google Sign-In and Gmail configuration | Public identity can launch without restricted-scope verification | Gmail import remains self-hosted until verification is complete                              |
-| Build-time frontend API configuration        | One Angular artifact pattern supports local and hosted backends  | A changed hosted API URL requires rebuilding the static site                                 |
-| Private MySQL container with persistent disk | Preserves the required database stack and private networking      | Render MySQL storage requires a paid private service                                         |
-| No direct Workday credentials or private API | Avoids brittle automation and credential risk                    | Detection depends on application-related emails                                              |
+| Build-time frontend API configuration           | One Angular artifact pattern supports local and hosted backends  | A changed hosted API URL requires rebuilding the static site                                 |
+| Aiven free MySQL for the hosted demo            | Preserves MySQL without a card or time-limited Render database   | Public TLS endpoint, 1 GB limit, single node, no SLA, and idle-service shutdown              |
+| No direct Workday credentials or private API    | Avoids brittle automation and credential risk                    | Detection depends on application-related emails                                              |
