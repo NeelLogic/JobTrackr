@@ -59,10 +59,18 @@
       </a>
 
       <p class="nav-section">Integrations</p>
-      <a routerLink="/imports" routerLinkActive="active" (click)="closeMenu()">
-        <span class="nav-icon" aria-hidden="true">&#9993;</span>
-        <span>Gmail import</span>
-      </a>
+      @if (gmailConfigured() === false) {
+        <button class="nav-link gmail-nav-button" type="button" (click)="openGmailInfo()">
+          <span class="nav-icon" aria-hidden="true">&#9993;</span>
+          <span>Gmail import</span>
+          <span class="nav-feature-badge">Self-hosted</span>
+        </button>
+      } @else {
+        <a routerLink="/imports" routerLinkActive="active" (click)="closeMenu()">
+          <span class="nav-icon" aria-hidden="true">&#9993;</span>
+          <span>Gmail import</span>
+        </a>
+      }
 
       <p class="nav-section">Account</p>
       <a routerLink="/settings" routerLinkActive="active" (click)="closeMenu()">
@@ -116,3 +124,50 @@
     <router-outlet />
   </section>
 </div>
+
+@if (gmailInfoOpen()) {
+  <div class="integration-dialog-backdrop" (click)="closeGmailInfo()">
+    <section
+      class="integration-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="gmail-self-hosted-heading"
+      aria-describedby="gmail-self-hosted-description"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        class="icon-button integration-dialog__close"
+        type="button"
+        aria-label="Close Gmail integration information"
+        (click)="closeGmailInfo()"
+      >
+        &times;
+      </button>
+      <span class="integration-dialog__icon" aria-hidden="true">&#9993;</span>
+      <p class="eyebrow">Optional integration</p>
+      <h2 id="gmail-self-hosted-heading">Gmail import is a self-hosted feature</h2>
+      <p id="gmail-self-hosted-description">
+        Gmail access is not enabled in this environment. To use it, clone or self-host JobTrackr and
+        configure your own Google OAuth credentials. Never enter a Google client secret in the
+        browser.
+      </p>
+      <div class="integration-dialog__actions">
+        <a
+          class="button button--primary"
+          [href]="gmailSetupGuideUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View setup guide
+        </a>
+        <a
+          class="button button--secondary"
+          routerLink="/applications/new"
+          (click)="closeGmailInfo()"
+        >
+          Add manually
+        </a>
+      </div>
+    </section>
+  </div>
+}

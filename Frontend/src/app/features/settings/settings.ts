@@ -4,6 +4,7 @@ import { finalize } from 'rxjs';
 import { GmailIntegrationService } from '../../core/api/gmail-integration.service';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth.service';
+import { GOOGLE_INTEGRATION_GUIDE_URL } from '../../core/integration-links';
 import { ConnectedIdentity } from '../../models/auth.models';
 import { GmailConnectionStatus } from '../../models/integration.models';
 import { GoogleSignInButton } from '../../shared/google-sign-in-button';
@@ -31,6 +32,7 @@ export class Settings implements OnInit {
   readonly identities = signal<ConnectedIdentity[]>([]);
   readonly gmailStatus = signal<GmailConnectionStatus | null>(null);
   readonly user = this.auth.user;
+  readonly gmailSetupGuideUrl = GOOGLE_INTEGRATION_GUIDE_URL;
 
   ngOnInit(): void {
     this.readGmailCallbackResult();

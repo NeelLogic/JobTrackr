@@ -70,6 +70,8 @@
       </div>
       @if (gmailStatus()?.connected) {
         <span class="connection-status">Connected</span>
+      } @else if (gmailStatus()?.configured === false) {
+        <span class="connection-status connection-status--self-hosted">Self-hosted</span>
       }
     </div>
 
@@ -134,28 +136,44 @@
           </div>
         }
       } @else {
-        <div class="connection-row connection-row--action">
-          <div>
-            <strong>Connect {{ user()?.email }}</strong>
-            @if (gmailConnection.configured) {
+        @if (gmailConnection.configured) {
+          <div class="connection-row connection-row--action">
+            <div>
+              <strong>Connect {{ user()?.email }}</strong>
               <span>Grant read-only access to scan for application updates.</span>
-            } @else {
-              <span>Gmail integration is not configured in this environment.</span>
-            }
+            </div>
+            <button
+              class="button button--primary"
+              type="button"
+              [disabled]="gmailConnecting()"
+              (click)="connectGmail()"
+            >
+              @if (gmailConnecting()) {
+                Connecting...
+              } @else {
+                Connect Gmail
+              }
+            </button>
           </div>
-          <button
-            class="button button--primary"
-            type="button"
-            [disabled]="gmailConnecting() || !gmailConnection.configured"
-            (click)="connectGmail()"
-          >
-            @if (gmailConnecting()) {
-              Connecting...
-            } @else {
-              Connect Gmail
-            }
-          </button>
-        </div>
+        } @else {
+          <div class="connection-row connection-row--action self-hosted-connection">
+            <div>
+              <strong>Available for self-hosted installations</strong>
+              <span>
+                This environment does not have Gmail OAuth credentials. Manual application tracking
+                remains fully available.
+              </span>
+            </div>
+            <a
+              class="button button--secondary"
+              [href]="gmailSetupGuideUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Setup guide
+            </a>
+          </div>
+        }
       }
     }
   </section>

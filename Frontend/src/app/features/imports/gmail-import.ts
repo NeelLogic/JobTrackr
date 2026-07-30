@@ -19,6 +19,7 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { GmailIntegrationService } from '../../core/api/gmail-integration.service';
 import { apiErrorMessage, apiFieldErrors } from '../../core/api-error';
+import { GOOGLE_INTEGRATION_GUIDE_URL } from '../../core/integration-links';
 import {
   APPLICATION_STATUSES,
   EMPLOYMENT_TYPES,
@@ -86,6 +87,7 @@ export class GmailImport implements OnInit {
   readonly importedApplicationId = signal<number | null>(null);
   readonly statuses = APPLICATION_STATUSES;
   readonly employmentTypes = EMPLOYMENT_TYPES;
+  readonly gmailSetupGuideUrl = GOOGLE_INTEGRATION_GUIDE_URL;
   readonly maxApplicationDate = localDate();
   readonly selectedCandidate = computed(() => {
     const selectedId = this.selectedId();
