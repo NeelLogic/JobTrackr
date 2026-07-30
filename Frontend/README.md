@@ -1,59 +1,64 @@
-# Jobtrackr
+# JobTrackr Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.19.
+The JobTrackr frontend is an Angular single-page application. It communicates
+with the Spring Boot API, attaches JobTrackr JWTs through an HTTP interceptor,
+and protects authenticated routes with Angular guards.
 
-## Development server
+## Development
 
-To start a local development server, run:
+From this directory:
 
-```bash
-ng serve
+```powershell
+npm ci
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Open `http://localhost:4200`. The development proxy forwards `/api` to
+`http://localhost:8080`.
 
-## Code scaffolding
+To start both the frontend and backend using the repository-root `.env` file:
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```powershell
+npm run dev
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## API configuration
 
-```bash
-ng generate --help
+The production build generates `public/config.js` from
+`JOBTRACKR_API_URL`. The value must be either a root-relative path such as
+`/api` or an absolute HTTP(S) URL such as
+`https://jobtrackr-api.example.com/api`.
+
+```powershell
+$env:JOBTRACKR_API_URL = "https://api.example.com/api"
+npm run build
 ```
 
-## Building
+Only the public API URL belongs in frontend configuration. Never place database
+passwords, OAuth client secrets, JWT secrets, or Gmail token-encryption keys in
+Angular environment files or Docker build arguments.
 
-To build the project run:
+## Tests and build
 
-```bash
-ng build
+```powershell
+npm run config:check
+npm test -- --watch=false
+npm run build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Container
 
-## Running unit tests
+The multi-stage Dockerfile builds Angular with Node 22 and serves the optimized
+artifact through unprivileged application content on Nginx. Nginx supports
+Angular route fallback, long-lived caching for hashed assets, no-store caching
+for runtime configuration, security headers, health checks, and `/api`
+proxying to the backend service on the private Docker network.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Build it directly:
 
-```bash
-ng test
+```powershell
+docker build --tag jobtrackr-frontend .
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+For the complete frontend, backend, and MySQL stack, use `docker compose` from
+the repository root.

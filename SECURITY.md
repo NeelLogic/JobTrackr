@@ -84,7 +84,14 @@ JobTrackr does not currently operate a paid bug-bounty program.
 - Gmail imports require explicit review and approval.
 - Raw Gmail message bodies and raw message IDs are not stored.
 - Flyway owns production schema changes.
-- GitHub Actions builds and tests pull requests.
+- The Spring Boot runtime image uses a non-root Linux user.
+- MySQL is reachable only on the private container or Render network.
+- Docker build contexts exclude local environments, logs, build output, and
+  editor metadata.
+- Frontend build configuration accepts only a public HTTP(S) or root-relative
+  API URL.
+- GitHub Actions builds, tests, and validates both production images on pull
+  requests.
 
 See [Docs/ARCHITECTURE.md](Docs/ARCHITECTURE.md) for the complete trust
 boundaries and data flows.
@@ -128,7 +135,9 @@ Production and public-demo deployments must:
 - keep error details and stack traces disabled;
 - store secrets only in deployment environment settings;
 - run health checks, backups, and restore tests;
-- omit Google credentials when the public-demo integration is disabled.
+- configure only the public Google Sign-In client ID in the public demo;
+- omit Gmail client secrets and token-encryption keys until the hosted
+  integration is verified.
 
 See [Docs/DEPLOYMENT.md](Docs/DEPLOYMENT.md) for the release checklist.
 
