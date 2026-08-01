@@ -229,6 +229,15 @@ h3,
   color: #8fa4c8;
   font-size: 0.9rem;
 }
+.auth-footer {
+  display: grid;
+  gap: 10px;
+  color: #7185aa;
+}
+.auth-footer small {
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
 .auth-panel {
   display: grid;
   min-height: 100vh;
@@ -338,6 +347,14 @@ h3,
 .interactive-row:hover,
 .interactive-row:focus-within {
   background: #f8fbff;
+}
+.attention-card__icon svg {
+  display: block;
+  width: 26px;
+  height: 26px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
 }
 @media (max-width: 680px) {
   .inline-actions--recent {

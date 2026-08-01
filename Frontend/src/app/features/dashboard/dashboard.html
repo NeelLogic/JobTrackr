@@ -42,7 +42,13 @@
     } @else {
       <section class="attention-grid" aria-label="Items needing attention">
         <a class="attention-card card" routerLink="/follow-ups">
-          <span class="attention-card__icon attention-card__icon--red" aria-hidden="true">!</span>
+          <span class="attention-card__icon attention-card__icon--red" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v6"></path>
+              <path d="M12 17h.01"></path>
+            </svg>
+          </span>
           <div>
             <strong>{{ dashboard.overdueFollowUps }}</strong>
             <span>Overdue follow-ups</span>
@@ -50,9 +56,13 @@
           <small>Review queue &rarr;</small>
         </a>
         <a class="attention-card card" routerLink="/follow-ups">
-          <span class="attention-card__icon attention-card__icon--blue" aria-hidden="true"
-            >&#128197;</span
-          >
+          <span class="attention-card__icon attention-card__icon--blue" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+              <path d="M16 3v4M8 3v4M3 10h18"></path>
+              <path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"></path>
+            </svg>
+          </span>
           <div>
             <strong>{{ dashboard.upcomingFollowUps }}</strong>
             <span>Upcoming in 14 days</span>
@@ -60,9 +70,14 @@
           <small>Plan ahead &rarr;</small>
         </a>
         <a class="attention-card card" routerLink="/follow-ups">
-          <span class="attention-card__icon attention-card__icon--amber" aria-hidden="true"
-            >&#8635;</span
-          >
+          <span class="attention-card__icon attention-card__icon--amber" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M20 7v5h-5"></path>
+              <path d="M4 17v-5h5"></path>
+              <path d="M18.5 10a7 7 0 0 0-12-3L4 10"></path>
+              <path d="M5.5 14a7 7 0 0 0 12 3l2.5-3"></path>
+            </svg>
+          </span>
           <div>
             <strong>{{ dashboard.staleApplications }}</strong>
             <span>Stale applications</span>
