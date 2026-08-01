@@ -1,14 +1,43 @@
-# JobTrackr
+<p align="center">
+  <a href="https://jobtrackr-neellogic.onrender.com">
+    <img src=""C:\Users\Solan\OneDrive\Pictures\JobTrackr_Favicon_512.png"" width="140" alt="JobTrackr logo">
+  </a>
+</p>
 
-[![Continuous Integration](https://github.com/NeelLogic/JobTrackr/actions/workflows/ci.yml/badge.svg)](https://github.com/NeelLogic/JobTrackr/actions/workflows/ci.yml)
+<h1 align="center">JobTrackr</h1>
 
-JobTrackr is a full-stack job application tracker for students and new graduates. It provides a secure, user-specific workspace for organizing opportunities, following application progress, and understanding job-search activity.
+<p align="center">
+  A secure, full-stack workspace for tracking job applications, follow-ups, and job-search performance.
+</p>
 
-**Live demo:** [jobtrackr-neellogic.onrender.com](https://jobtrackr-neellogic.onrender.com)
+<p align="center">
+  <a href="https://jobtrackr-neellogic.onrender.com"><img src="https://img.shields.io/badge/Live_Demo-Open_JobTrackr-2F6FED?style=for-the-badge" alt="Open the JobTrackr live demo"></a>
+  <a href="https://github.com/NeelLogic/JobTrackr/releases/tag/v1"><img src="https://img.shields.io/github/v/release/NeelLogic/JobTrackr?style=for-the-badge&label=Release" alt="JobTrackr release"></a>
+  <a href="https://github.com/NeelLogic/JobTrackr/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/NeelLogic/JobTrackr/ci.yml?branch=main&style=for-the-badge&label=CI" alt="Continuous Integration status"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/NeelLogic/JobTrackr?style=for-the-badge" alt="License"></a>
+</p>
 
-> **Project status:** The public V1 deployment is live on Render with an external Aiven MySQL database, and Phase 12 final QA is in progress. Google Sign-In is available in the hosted demo, while restricted-scope Gmail import remains an optional self-hosted feature. The complete application also runs locally as production-style Docker containers with Nginx, Spring Boot, and persistent MySQL. Gemini-assisted workflows remain deferred to V2.
+<p align="center">
+  <a href="#features">Features</a> &bull;
+  <a href="#quick-start">Quick start</a> &bull;
+  <a href="#architecture">Architecture</a> &bull;
+  <a href="#testing">Testing</a> &bull;
+  <a href="#documentation">Documentation</a> &bull;
+  <a href="./CONTRIBUTING.md">Contributing</a>
+</p>
+
+JobTrackr is designed for students, new graduates, and anyone who wants a clearer alternative to tracking applications in a spreadsheet. Each user receives a private workspace for managing opportunities, monitoring pipeline progress, and staying ahead of follow-ups.
+
+> **V1 is complete and live.** The public demo runs on Render with Aiven MySQL and supports password authentication, Google Sign-In, manual tracking, dashboards, analytics, companies, and follow-ups. Gmail import uses Google's restricted `gmail.readonly` scope and remains an optional self-hosted feature. Gemini-assisted workflows are planned for V2.
+
+| Organize | Understand | Take action | Integrate safely |
+| --- | --- | --- | --- |
+| Track every application and status | See trends, conversion, and response rates | Surface overdue follow-ups and stale applications | Use Google Sign-In or optional read-only Gmail import |
 
 ## Features
+
+<details>
+<summary><strong>Explore the complete V1 feature set</strong></summary>
 
 - Account registration and login with BCrypt password hashing and JWT authentication
 - Google Sign-In for new or previously linked accounts
@@ -38,6 +67,8 @@ JobTrackr is a full-stack job application tracker for students and new graduates
 - Docker Compose orchestration with private networking and persistent MySQL storage
 - Free Render Blueprint configuration with checks-gated deployments, Aiven MySQL, and environment-managed secrets
 
+</details>
+
 ## Tech Stack
 
 | Layer          | Technologies                                                                |
@@ -52,21 +83,13 @@ JobTrackr is a full-stack job application tracker for students and new graduates
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    GIS["Google Identity Services"] -->|"Signed ID credential"| UI
-    UI["Angular SPA"] -->|"JWT + JSON"| API["Spring Boot REST API"]
-    UI -->|"Gmail connect"| API
-    API --> SEC["Spring Security / JWT filter"]
-    SEC -->|"Verify issuer, audience, signature, expiry"| GKEYS["Google public keys"]
-    SEC --> CTRL["Controllers"]
-    CTRL --> SVC["Services and validation"]
-    SVC -->|"OAuth code exchange / revoke"| GOAUTH["Google OAuth"]
-    SVC -->|"Bounded read-only scan"| GMAIL["Gmail API"]
-    SVC --> REPO["Spring Data repositories"]
-    REPO --> DB[("MySQL: user data + status history + encrypted Gmail tokens + review metadata")]
-    FLY["Flyway migrations"] --> DB
-```
+<p align="center">
+  <a href="./Docs/ARCHITECTURE.md">
+    <img src="./Docs/JobTrackr_System_Architecture.png" alt="JobTrackr system architecture showing Angular, Spring Boot, MySQL, Google Identity Services, and the Gmail API">
+  </a>
+</p>
+
+<p align="center"><sub>Click the diagram to explore the complete architecture and trust boundaries.</sub></p>
 
 The backend uses a controller-service-repository structure with DTOs, entity mapping, validation, and centralized exception handling. Application, status-history, analytics, company, follow-up, Gmail-connection, and Gmail-candidate queries are scoped to the authenticated user.
 
@@ -84,7 +107,21 @@ JobTrackr/
 `-- README.md
 ```
 
+## Documentation
+
+| Resource | What it covers |
+| --- | --- |
+| [Architecture](./Docs/ARCHITECTURE.md) | System boundaries, backend layers, data ownership, and request flows |
+| [Deployment](./Docs/DEPLOYMENT.md) | Render, Aiven, Docker, environment configuration, and operational checks |
+| [Google integration](./Docs/GOOGLE_INTEGRATION.md) | Google Sign-In, Gmail OAuth, restricted scopes, and local configuration |
+| [Security policy](./SECURITY.md) | Supported version, vulnerability reporting, and security expectations |
+| [Contributing guide](./CONTRIBUTING.md) | Branching, commits, tests, and pull-request workflow |
+| [Final project documentation](./Docs/JobTrackr_Final_Project_Documentation.docx) | Downloadable V1 project report |
+
 ## API Overview
+
+<details>
+<summary><strong>View the API endpoint reference</strong></summary>
 
 | Method   | Endpoint                                         | Purpose                                             |
 | -------- | ------------------------------------------------ | --------------------------------------------------- |
@@ -115,13 +152,15 @@ JobTrackr/
 
 Registration, password login, Google login, Google configuration, the one-time Gmail OAuth callback, and health checks are public. Starting or removing a Gmail connection, scanning Gmail, reviewing import candidates, account linking, connected identities, application data, dashboard metrics, analytics, company insights, and follow-up queues require an `Authorization: Bearer <token>` header.
 
+</details>
+
 ### Analytics behavior
 
 The Analytics screen can compare the last 30 days, 90 days, six months, or all recorded activity. Funnel metrics use application status history so an application remains counted as having reached Interview or Offer after it later moves to another status. Follow-up queues treat Applied, Assessment, Interview, and Offer as active stages; “stale” means an active application has not changed for at least 14 days.
 
 Migration V5 creates a baseline history entry for applications that existed before Phase 10. Because earlier transitions were not available to backfill, historical stage accuracy for those records is limited to what can be inferred from their current status. Every transition made after V5 is recorded exactly.
 
-## Local Development
+## Quick Start
 
 ### Prerequisites
 
@@ -207,6 +246,9 @@ docker compose down --volumes
 
 This volume is separate from a MySQL installation running directly on Windows.
 
+<details>
+<summary><strong>Optional: enable Google Sign-In locally</strong></summary>
+
 ### Google Sign-In setup
 
 Google Sign-In is disabled automatically when `GOOGLE_CLIENT_ID` is not configured, so local password authentication continues to work without Google.
@@ -223,6 +265,11 @@ To enable it:
 5. Copy the public client ID into `GOOGLE_CLIENT_ID`, then restart the backend.
 
 Phase 7 uses the Google Identity Services callback flow and does not require a redirect URI or client secret. Never add a Google client secret to the frontend or repository.
+
+</details>
+
+<details>
+<summary><strong>Optional: enable read-only Gmail import</strong></summary>
 
 ### Gmail connection setup
 
@@ -271,6 +318,8 @@ Never put the client secret or encryption key in Angular, Git, screenshots, or d
 
 The default scan examines at most 100 matching messages from the previous 180 days. Scans are user initiated; no Gmail push notifications, background mailbox monitoring, Workday credentials, or Workday private API are used.
 
+</details>
+
 ## Environment Variables
 
 | Variable                      | Required              | Default                          | Description                                                   |
@@ -316,7 +365,7 @@ npm test -- --watch=false
 npm run build
 ```
 
-Current Phase 12 baseline:
+V1 release baseline:
 
 - 59 backend tests covering password and Google authentication, Gmail configuration, token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, status history, analytics calculations, follow-up classification, authorization, validation, user data isolation, services, JWT behavior, and API integration
 - 104 frontend tests covering API services, route guards, password and Google authentication, Gmail availability and connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, confirmed application deletion, application workflows, navigation, date validation, persisted themes, and shared UI presentation
@@ -373,7 +422,7 @@ For a future production hardening pass, token storage can move from browser loca
 | 9     | Workday-email detection, import review, and deduplication          | Complete      |
 | 10    | Advanced company and application analytics                         | Complete      |
 | 11    | Gemini-assisted resume and cover-letter workflows                  | Deferred (V2) |
-| 12    | Docker, Render deployment, final QA, documentation, and V1 release | In progress   |
+| 12    | Docker, Render deployment, final QA, documentation, and V1 release | Complete      |
 
 ### Phase Closeout Checklist
 
@@ -381,7 +430,7 @@ Every phase is complete only after:
 
 - Relevant tests and production builds pass
 - Security and repository-cleanliness checks pass
-- The README reflects the features, setup, test counts, deployment state, and next phase
+- The README reflects the completed features, setup, test counts, deployment state, and release scope
 - A focused pull request passes all required GitHub checks
 
 ## Planned Improvements
@@ -393,3 +442,13 @@ The following improvements are outside the V1.0 release scope and are candidates
 - Exportable analytics and configurable follow-up reminder windows
 - End-to-end browser tests for production-critical workflows
 - Optional refresh-token rotation and password-reset workflow
+
+## License
+
+JobTrackr is available under the [MIT License](./LICENSE).
+
+<p align="center">
+  Built by <a href="https://github.com/NeelLogic">Neel Solanki</a> &bull;
+  <a href="https://jobtrackr-neellogic.onrender.com">Live demo</a> &bull;
+  <a href="https://github.com/NeelLogic/JobTrackr/releases/tag/v1">V1 release</a>
+</p>
