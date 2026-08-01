@@ -109,6 +109,18 @@
   gap: 12px;
   padding-top: 8px;
 }
+.form-actions__spacer {
+  flex: 1;
+}
+.form-delete {
+  border-color: #fecdca;
+  color: var(--danger);
+  background: #fff;
+}
+.form-delete:hover:not(:disabled) {
+  color: #fff;
+  background: #b42318;
+}
 .state-actions {
   display: flex;
   flex-wrap: wrap;
@@ -127,5 +139,8 @@
   .form-actions {
     align-items: stretch;
     flex-direction: column-reverse;
+  }
+  .form-actions__spacer {
+    display: none;
   }
 }

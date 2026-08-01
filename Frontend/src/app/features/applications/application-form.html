@@ -315,11 +315,34 @@
       </section>
 
       <div class="form-actions">
+        @if (isEdit()) {
+          <button
+            class="button form-delete"
+            type="button"
+            [disabled]="saving() || deleting()"
+            (click)="requestDelete()"
+          >
+            Delete application
+          </button>
+          <span class="form-actions__spacer" aria-hidden="true"></span>
+        }
         <a class="button button--secondary" [routerLink]="cancelLink()">Cancel</a>
         <button class="button button--primary" type="submit" [disabled]="saving()">
           {{ saving() ? 'Saving...' : isEdit() ? 'Save changes' : 'Add application' }}
         </button>
       </div>
     </form>
+
+    @if (confirmingDelete()) {
+      @if (application(); as item) {
+        <app-delete-confirmation-dialog
+          [application]="item"
+          [deleting]="deleting()"
+          [error]="deleteError()"
+          (cancelled)="cancelDelete()"
+          (confirmed)="deleteApplication()"
+        />
+      }
+    }
   }
 </main>

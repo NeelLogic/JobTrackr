@@ -22,10 +22,11 @@ import {
   PageResponse,
   SortDirection,
 } from '../../models/application.models';
+import { DeleteConfirmationDialog } from '../../shared/delete-confirmation-dialog';
 
 @Component({
   selector: 'app-application-list',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, DeleteConfirmationDialog],
   templateUrl: './application-list.html',
   styleUrl: './application-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +39,9 @@ export class ApplicationList implements OnInit {
   readonly loading = signal(false);
   readonly error = signal('');
   readonly result = signal<PageResponse<JobApplication> | null>(null);
+  readonly deleteTarget = signal<JobApplication | null>(null);
+  readonly deleting = signal(false);
+  readonly deleteError = signal('');
   readonly applications = computed(() => this.result()?.content ?? []);
   readonly rangeStart = computed(() => {
     const result = this.result();
@@ -125,6 +129,42 @@ export class ApplicationList implements OnInit {
 
   statusClass(status: ApplicationStatus): string {
     return `status-badge status-badge--${status.toLowerCase()}`;
+  }
+
+  requestDelete(application: JobApplication): void {
+    this.deleteError.set('');
+    this.deleteTarget.set(application);
+  }
+
+  cancelDelete(): void {
+    if (!this.deleting()) {
+      this.deleteTarget.set(null);
+      this.deleteError.set('');
+    }
+  }
+
+  deleteApplication(): void {
+    const application = this.deleteTarget();
+    if (!application || this.deleting()) {
+      return;
+    }
+
+    this.deleting.set(true);
+    this.deleteError.set('');
+    this.api
+      .delete(application.id)
+      .pipe(finalize(() => this.deleting.set(false)))
+      .subscribe({
+        next: () => {
+          const currentPage = this.result()?.page ?? 0;
+          const page =
+            this.applications().length === 1 && currentPage > 0 ? currentPage - 1 : currentPage;
+          this.deleteTarget.set(null);
+          this.load(page);
+        },
+        error: (error) =>
+          this.deleteError.set(apiErrorMessage(error, 'Unable to delete this application.')),
+      });
   }
 
   private load(page: number): void {

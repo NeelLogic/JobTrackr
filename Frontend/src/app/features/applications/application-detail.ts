@@ -12,10 +12,11 @@ import { finalize } from 'rxjs';
 import { ApplicationApiService } from '../../core/api/application-api.service';
 import { apiErrorMessage } from '../../core/api-error';
 import { ApplicationStatus, JobApplication } from '../../models/application.models';
+import { DeleteConfirmationDialog } from '../../shared/delete-confirmation-dialog';
 
 @Component({
   selector: 'app-application-detail',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, DeleteConfirmationDialog],
   templateUrl: './application-detail.html',
   styleUrl: './application-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

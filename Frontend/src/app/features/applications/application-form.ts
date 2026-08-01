@@ -26,6 +26,7 @@ import {
   EmploymentType,
   JobApplication,
 } from '../../models/application.models';
+import { DeleteConfirmationDialog } from '../../shared/delete-confirmation-dialog';
 
 type FieldName =
   | 'company'
@@ -74,7 +75,7 @@ const notFutureDate: ValidatorFn = (control: AbstractControl): ValidationErrors 
 
 @Component({
   selector: 'app-application-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, DeleteConfirmationDialog],
   templateUrl: './application-form.html',
   styleUrl: './application-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -92,6 +93,10 @@ export class ApplicationForm implements OnInit {
   readonly submitted = signal(false);
   readonly loadError = signal('');
   readonly saveError = signal('');
+  readonly application = signal<JobApplication | null>(null);
+  readonly confirmingDelete = signal(false);
+  readonly deleting = signal(false);
+  readonly deleteError = signal('');
   readonly serverErrors = signal<Record<string, string>>({});
   readonly maxApplicationDate = localDate();
   readonly statuses = APPLICATION_STATUSES;
@@ -195,6 +200,38 @@ export class ApplicationForm implements OnInit {
     }
   }
 
+  requestDelete(): void {
+    if (this.application()) {
+      this.deleteError.set('');
+      this.confirmingDelete.set(true);
+    }
+  }
+
+  cancelDelete(): void {
+    if (!this.deleting()) {
+      this.confirmingDelete.set(false);
+      this.deleteError.set('');
+    }
+  }
+
+  deleteApplication(): void {
+    const id = this.applicationId();
+    if (id === null || this.deleting() || this.saving()) {
+      return;
+    }
+
+    this.deleting.set(true);
+    this.deleteError.set('');
+    this.api
+      .delete(id)
+      .pipe(finalize(() => this.deleting.set(false)))
+      .subscribe({
+        next: () => void this.router.navigate(['/applications']),
+        error: (error) =>
+          this.deleteError.set(apiErrorMessage(error, 'Unable to delete this application.')),
+      });
+  }
+
   fieldError(field: FieldName): string | null {
     const serverError = this.serverErrors()[field];
     if (serverError) {
@@ -232,6 +269,7 @@ export class ApplicationForm implements OnInit {
   }
 
   private populateForm(application: JobApplication): void {
+    this.application.set(application);
     this.form.reset({
       company: application.company,
       jobTitle: application.jobTitle,
