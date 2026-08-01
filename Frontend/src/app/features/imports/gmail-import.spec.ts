@@ -159,6 +159,17 @@ describe('GmailImport', () => {
     expect(component.importedApplicationId()).toBe(41);
   });
 
+  it('rejects an extended follow-up year during candidate review', () => {
+    const { component } = setup();
+    component.selectCandidate(candidate);
+
+    component.form.controls.followUpDate.setValue('123456-08-01');
+    component.form.controls.followUpDate.markAsTouched();
+
+    expect(component.fieldError('followUpDate')).toBe('Follow-up date must use a four-digit year.');
+    expect(component.form.controls.followUpDate.invalid).toBe(true);
+  });
+
   it('requires confirmation before dismissing a suggestion', () => {
     const { component, gmail } = setup();
     gmail.dismissCandidate.mockReturnValue(of(null));
