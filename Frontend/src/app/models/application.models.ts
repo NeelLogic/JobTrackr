@@ -18,6 +18,18 @@ export const EMPLOYMENT_TYPES = [
   'OTHER',
 ] as const;
 
+export const SALARY_CURRENCIES = [
+  { code: 'CAD', label: 'CAD — Canadian Dollar' },
+  { code: 'USD', label: 'USD — US Dollar' },
+  { code: 'EUR', label: 'EUR — Euro' },
+  { code: 'GBP', label: 'GBP — British Pound' },
+  { code: 'AUD', label: 'AUD — Australian Dollar' },
+  { code: 'CHF', label: 'CHF — Swiss Franc' },
+  { code: 'CNY', label: 'CNY — Chinese Yuan' },
+  { code: 'INR', label: 'INR — Indian Rupee' },
+  { code: 'JPY', label: 'JPY — Japanese Yen' },
+] as const;
+
 export const APPLICATION_SORT_FIELDS = [
   'company',
   'jobTitle',

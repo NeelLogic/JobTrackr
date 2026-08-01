@@ -21,11 +21,17 @@ import { apiErrorMessage, apiFieldErrors } from '../../core/api-error';
 import {
   APPLICATION_STATUSES,
   EMPLOYMENT_TYPES,
+  SALARY_CURRENCIES,
   ApplicationRequest,
   ApplicationStatus,
   EmploymentType,
   JobApplication,
 } from '../../models/application.models';
+import {
+  MAX_SUPPORTED_DATE,
+  MIN_SUPPORTED_DATE,
+  fourDigitDateYear,
+} from '../../shared/date.validators';
 import { DeleteConfirmationDialog } from '../../shared/delete-confirmation-dialog';
 
 type FieldName =
@@ -99,8 +105,11 @@ export class ApplicationForm implements OnInit {
   readonly deleteError = signal('');
   readonly serverErrors = signal<Record<string, string>>({});
   readonly maxApplicationDate = localDate();
+  readonly minSupportedDate = MIN_SUPPORTED_DATE;
+  readonly maxSupportedDate = MAX_SUPPORTED_DATE;
   readonly statuses = APPLICATION_STATUSES;
   readonly employmentTypes = EMPLOYMENT_TYPES;
+  readonly salaryCurrencies = SALARY_CURRENCIES;
   readonly cancelLink = computed(() => {
     const id = this.applicationId();
     return id === null ? ['/applications'] : ['/applications', id];
@@ -112,7 +121,7 @@ export class ApplicationForm implements OnInit {
       jobTitle: ['', [Validators.required, Validators.maxLength(160)]],
       location: ['', Validators.maxLength(160)],
       jobUrl: ['', [Validators.maxLength(1000), Validators.pattern(/^https?:\/\/\S+$/i)]],
-      applicationDate: ['', notFutureDate],
+      applicationDate: ['', [fourDigitDateYear, notFutureDate]],
       status: this.formBuilder.nonNullable.control<ApplicationStatus>('SAVED', Validators.required),
       employmentType: this.formBuilder.nonNullable.control<EmploymentType>(
         'FULL_TIME',
@@ -122,7 +131,7 @@ export class ApplicationForm implements OnInit {
       salaryMax: this.formBuilder.control<number | null>(null, Validators.min(0)),
       salaryCurrency: ['', Validators.pattern(/^[A-Za-z]{3}$/)],
       notes: ['', Validators.maxLength(10000)],
-      followUpDate: [''],
+      followUpDate: ['', fourDigitDateYear],
     },
     { validators: applicationRules },
   );
@@ -141,11 +150,15 @@ export class ApplicationForm implements OnInit {
       pattern: 'Enter a complete HTTP or HTTPS URL.',
       maxlength: 'Job URL must be 1,000 characters or fewer.',
     },
-    applicationDate: { futureDate: 'Application date cannot be in the future.' },
+    applicationDate: {
+      dateYear: 'Application date must use a four-digit year.',
+      futureDate: 'Application date cannot be in the future.',
+    },
     salaryMin: { min: 'Minimum salary cannot be negative.' },
     salaryMax: { min: 'Maximum salary cannot be negative.' },
-    salaryCurrency: { pattern: 'Use a three-letter currency code such as CAD or USD.' },
+    salaryCurrency: { pattern: 'Select a supported currency.' },
     notes: { maxlength: 'Notes must be 10,000 characters or fewer.' },
+    followUpDate: { dateYear: 'Follow-up date must use a four-digit year.' },
   };
 
   ngOnInit(): void {

@@ -28,6 +28,11 @@ import {
   EmploymentType,
 } from '../../models/application.models';
 import { GmailConnectionStatus, GmailImportCandidate } from '../../models/integration.models';
+import {
+  MAX_SUPPORTED_DATE,
+  MIN_SUPPORTED_DATE,
+  fourDigitDateYear,
+} from '../../shared/date.validators';
 
 type ReviewField =
   | 'company'
@@ -89,6 +94,8 @@ export class GmailImport implements OnInit {
   readonly employmentTypes = EMPLOYMENT_TYPES;
   readonly gmailSetupGuideUrl = GOOGLE_INTEGRATION_GUIDE_URL;
   readonly maxApplicationDate = localDate();
+  readonly minSupportedDate = MIN_SUPPORTED_DATE;
+  readonly maxSupportedDate = MAX_SUPPORTED_DATE;
   readonly selectedCandidate = computed(() => {
     const selectedId = this.selectedId();
     return this.candidates().find((candidate) => candidate.id === selectedId) ?? null;
@@ -100,7 +107,7 @@ export class GmailImport implements OnInit {
       jobTitle: ['', [Validators.required, Validators.maxLength(160)]],
       location: ['', Validators.maxLength(160)],
       jobUrl: ['', [Validators.maxLength(1000), Validators.pattern(/^https?:\/\/\S+$/i)]],
-      applicationDate: ['', notFutureDate],
+      applicationDate: ['', [fourDigitDateYear, notFutureDate]],
       status: this.formBuilder.nonNullable.control<ApplicationStatus>(
         'APPLIED',
         Validators.required,
@@ -110,7 +117,7 @@ export class GmailImport implements OnInit {
         Validators.required,
       ),
       notes: ['', Validators.maxLength(10000)],
-      followUpDate: [''],
+      followUpDate: ['', fourDigitDateYear],
     },
     { validators: applicationDateRequired },
   );
@@ -129,8 +136,12 @@ export class GmailImport implements OnInit {
       pattern: 'Enter a complete HTTP or HTTPS URL.',
       maxlength: 'Job URL must be 1,000 characters or fewer.',
     },
-    applicationDate: { futureDate: 'Application date cannot be in the future.' },
+    applicationDate: {
+      dateYear: 'Application date must use a four-digit year.',
+      futureDate: 'Application date cannot be in the future.',
+    },
     notes: { maxlength: 'Notes must be 10,000 characters or fewer.' },
+    followUpDate: { dateYear: 'Follow-up date must use a four-digit year.' },
   };
 
   ngOnInit(): void {
