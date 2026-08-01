@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>JobTrackr</title>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#101827" />
+  <rect
+    x="2.75"
+    y="2.75"
+    width="58.5"
+    height="58.5"
+    rx="13.25"
+    fill="none"
+    stroke="#2a3a55"
+    stroke-width="1.5"
+  />
+  <path
+    d="M27 15v24c0 7.5-4.5 12-11 12-4.2 0-7.4-1.9-9.4-5.4"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M34 16h22M45 16v34"
+    fill="none"
+    stroke="#2f6fed"
+    stroke-width="6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
