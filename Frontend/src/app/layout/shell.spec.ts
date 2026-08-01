@@ -74,6 +74,14 @@ describe('Shell', () => {
     expect(menuButton.getAttribute('aria-expanded')).toBe('true');
   });
 
+  it('shows the project copyright in the workspace footer', () => {
+    const { fixture } = setup();
+    const footer = fixture.nativeElement.querySelector('.workspace-footer') as HTMLElement;
+
+    expect(footer.textContent).toContain('2026 Neel Solanki');
+    expect(footer.textContent).toContain('JobTrackr');
+  });
+
   it('closes the mobile navigation when Escape is pressed', () => {
     const { component } = setup();
     component.openMenu();
