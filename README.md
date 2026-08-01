@@ -32,6 +32,7 @@ JobTrackr is a full-stack job application tracker for students and new graduates
 - Overdue, due-today, upcoming, and stale application follow-up queues
 - Application status history recorded for every new application and subsequent status transition
 - Sectioned workspace navigation for overview, tracking, integrations, and account management
+- Persistent light and dark themes with system-preference initialization and accessible controls
 - Responsive layouts, keyboard navigation, accessible form errors, and loading, empty, and error states
 - Multi-stage production containers with a non-root backend runtime and health checks
 - Docker Compose orchestration with private networking and persistent MySQL storage
@@ -318,7 +319,7 @@ npm run build
 Current Phase 12 baseline:
 
 - 58 backend tests covering password and Google authentication, Gmail configuration, token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, status history, analytics calculations, follow-up classification, authorization, validation, user data isolation, services, JWT behavior, and API integration
-- 91 frontend tests covering API services, route guards, password and Google authentication, Gmail availability and connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, confirmed application deletion, application workflows, navigation, and shared UI presentation
+- 95 frontend tests covering API services, route guards, password and Google authentication, Gmail availability and connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, confirmed application deletion, application workflows, navigation, persisted themes, and shared UI presentation
 - 5 Node tests covering safe frontend runtime API configuration, JavaScript-string escaping, and free Render Blueprint constraints
 - Local container verification covering image builds, health checks, Flyway migrations, Nginx proxying, Angular deep links, and MySQL persistence across a full restart
 

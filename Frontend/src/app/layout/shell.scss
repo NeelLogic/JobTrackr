@@ -108,6 +108,9 @@
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
+.sidebar-theme-toggle {
+  margin: 8px 12px 0;
+}
 .sidebar__profile {
   display: grid;
   grid-template-columns: 38px 1fr auto;
@@ -153,7 +156,7 @@
 .workspace-footer {
   margin-top: auto;
   padding: 20px 28px 24px;
-  color: #64748b;
+  color: var(--ink-muted);
   font-size: 0.75rem;
   text-align: center;
 }
@@ -181,7 +184,7 @@
   padding: 34px;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
 
   h2 {
@@ -209,7 +212,7 @@
   margin-bottom: 20px;
   border-radius: 14px;
   color: var(--primary);
-  background: #eff6ff;
+  background: var(--blue-surface);
   font-size: 1.35rem;
 }
 .integration-dialog__actions {
@@ -242,7 +245,7 @@
     justify-content: space-between;
     height: 64px;
     padding: 0 18px;
-    background: white;
+    background: var(--surface);
     border-bottom: 1px solid var(--border);
   }
   .sidebar__close {

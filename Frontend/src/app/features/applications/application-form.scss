@@ -24,7 +24,7 @@
   place-items: center;
   border-radius: 9px;
   color: var(--primary);
-  background: #eff6ff;
+  background: var(--blue-surface);
   font-size: 0.76rem;
   font-weight: 800;
 }
@@ -49,7 +49,7 @@
   display: grid;
   align-content: start;
   gap: 8px;
-  color: #334155;
+  color: var(--ink-secondary);
   font-size: 0.84rem;
   font-weight: 700;
 }
@@ -62,10 +62,10 @@
   width: 100%;
   min-height: 45px;
   padding: 10px 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   color: var(--ink);
-  background: #fff;
+  background: var(--surface);
   outline: none;
   transition:
     border 0.15s ease,
@@ -84,7 +84,7 @@
 }
 .field input::placeholder,
 .field textarea::placeholder {
-  color: #94a3b8;
+  color: var(--ink-soft);
   font-weight: 400;
 }
 .field input.ng-invalid.ng-touched,
@@ -113,13 +113,13 @@
   flex: 1;
 }
 .form-delete {
-  border-color: #fecdca;
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
   color: var(--danger);
-  background: #fff;
+  background: var(--surface);
 }
 .form-delete:hover:not(:disabled) {
   color: #fff;
-  background: #b42318;
+  background: var(--danger);
 }
 .state-actions {
   display: flex;

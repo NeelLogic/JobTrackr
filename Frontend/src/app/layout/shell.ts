@@ -4,10 +4,11 @@ import { DashboardApiService } from '../core/api/dashboard-api.service';
 import { GmailIntegrationService } from '../core/api/gmail-integration.service';
 import { AuthService } from '../core/auth.service';
 import { GOOGLE_INTEGRATION_GUIDE_URL } from '../core/integration-links';
+import { ThemeToggle } from '../shared/theme-toggle';
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ThemeToggle],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
 })

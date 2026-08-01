@@ -77,6 +77,7 @@
         <span class="nav-icon" aria-hidden="true">&#9881;</span>
         <span>Settings</span>
       </a>
+      <app-theme-toggle class="sidebar-theme-toggle" tone="sidebar" />
     </nav>
 
     <div class="sidebar__profile">
@@ -119,7 +120,7 @@
         &#9776;
       </button>
       <a class="brand" routerLink="/dashboard">Job<span>Trackr</span></a>
-      <span></span>
+      <app-theme-toggle [compact]="true" />
     </header>
     <router-outlet />
     <footer class="workspace-footer">
