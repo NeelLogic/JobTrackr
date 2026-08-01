@@ -4,7 +4,9 @@
 
 JobTrackr is a full-stack job application tracker for students and new graduates. It provides a secure, user-specific workspace for organizing opportunities, following application progress, and understanding job-search activity.
 
-> **Project status:** Phase 12 is in progress. The complete application runs locally as production-style Docker containers with Nginx, Spring Boot, and persistent MySQL. The hosted V1 Blueprint defines only free Render frontend/backend services, while its external Aiven free MySQL plan requires no card. The public deployment will provide Google Sign-In while keeping restricted-scope Gmail import as an optional self-hosted feature. Gemini-assisted workflows remain deferred to V2.
+**Live demo:** [jobtrackr-neellogic.onrender.com](https://jobtrackr-neellogic.onrender.com)
+
+> **Project status:** The public V1 deployment is live on Render with an external Aiven MySQL database, and Phase 12 final QA is in progress. Google Sign-In is available in the hosted demo, while restricted-scope Gmail import remains an optional self-hosted feature. The complete application also runs locally as production-style Docker containers with Nginx, Spring Boot, and persistent MySQL. Gemini-assisted workflows remain deferred to V2.
 
 ## Features
 
@@ -17,7 +19,7 @@ JobTrackr is a full-stack job application tracker for students and new graduates
 - User-bound message fingerprints that prevent repeat imports without storing raw Gmail message IDs or bodies
 - Protected Angular routes and authenticated API requests
 - User-specific data isolation at the repository and service layers
-- Complete job application create, read, update, and delete workflows
+- Complete job application create, read, update, and confirmed-delete workflows across the dashboard, list, detail, and edit screens
 - Company, job title, location, job URL, dates, employment type, salary, notes, and follow-up tracking
 - Saved, Applied, Assessment, Interview, Offer, Rejected, and Withdrawn statuses
 - Search by company, job title, or location
@@ -316,7 +318,7 @@ npm run build
 Current Phase 12 baseline:
 
 - 58 backend tests covering password and Google authentication, Gmail configuration, token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, status history, analytics calculations, follow-up classification, authorization, validation, user data isolation, services, JWT behavior, and API integration
-- 79 frontend tests covering API services, route guards, password and Google authentication, Gmail availability and connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, application workflows, and navigation
+- 87 frontend tests covering API services, route guards, password and Google authentication, Gmail availability and connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, confirmed application deletion, application workflows, and navigation
 - 5 Node tests covering safe frontend runtime API configuration, JavaScript-string escaping, and free Render Blueprint constraints
 - Local container verification covering image builds, health checks, Flyway migrations, Nginx proxying, Angular deep links, and MySQL persistence across a full restart
 

@@ -43,8 +43,10 @@ describe('ApplicationList', () => {
   function setup(response: PageResponse<JobApplication> = page()) {
     const api = {
       list: vi.fn<(query?: ApplicationQuery) => ReturnType<ApplicationApiService['list']>>(),
+      delete: vi.fn<(id: number) => ReturnType<ApplicationApiService['delete']>>(),
     };
     api.list.mockReturnValue(of(response));
+    api.delete.mockReturnValue(of(undefined));
 
     TestBed.configureTestingModule({
       imports: [ApplicationList],
@@ -134,6 +136,7 @@ describe('ApplicationList', () => {
   it('shows a useful fallback and allows the failed request to be retried', () => {
     const api = {
       list: vi.fn<(query?: ApplicationQuery) => ReturnType<ApplicationApiService['list']>>(),
+      delete: vi.fn<(id: number) => ReturnType<ApplicationApiService['delete']>>(),
     };
     api.list
       .mockReturnValueOnce(throwError(() => new Error('offline')))
@@ -152,5 +155,30 @@ describe('ApplicationList', () => {
     expect(api.list).toHaveBeenCalledTimes(2);
     expect(component.error()).toBe('');
     expect(component.applications()).toEqual([application]);
+  });
+
+  it('confirms deletion and reloads the current page after success', () => {
+    const { api, component } = setup();
+    api.list.mockClear();
+
+    component.requestDelete(application);
+    expect(component.deleteTarget()).toEqual(application);
+
+    component.deleteApplication();
+
+    expect(api.delete).toHaveBeenCalledWith(7);
+    expect(component.deleteTarget()).toBeNull();
+    expect(api.list).toHaveBeenCalledWith(expect.objectContaining({ page: 0 }));
+  });
+
+  it('keeps the dialog open when deletion fails', () => {
+    const { api, component } = setup();
+    api.delete.mockReturnValue(throwError(() => new Error('offline')));
+
+    component.requestDelete(application);
+    component.deleteApplication();
+
+    expect(component.deleteTarget()).toEqual(application);
+    expect(component.deleteError()).toBe('Unable to delete this application.');
   });
 });

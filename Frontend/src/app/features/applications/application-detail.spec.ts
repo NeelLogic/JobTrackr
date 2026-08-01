@@ -95,7 +95,9 @@ describe('ApplicationDetail', () => {
     fixture.detectChanges();
 
     component.requestDelete();
+    fixture.detectChanges();
     expect(component.confirmingDelete()).toBe(true);
+    expect(fixture.nativeElement.querySelector('[role="alertdialog"]')).not.toBeNull();
 
     component.deleteApplication();
     expect(api.delete).toHaveBeenCalledWith(7);

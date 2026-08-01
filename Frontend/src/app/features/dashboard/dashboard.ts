@@ -9,11 +9,17 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { ApplicationApiService } from '../../core/api/application-api.service';
 import { DashboardApiService } from '../../core/api/dashboard-api.service';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth.service';
-import { APPLICATION_STATUSES, ApplicationStatus } from '../../models/application.models';
+import {
+  APPLICATION_STATUSES,
+  ApplicationStatus,
+  JobApplication,
+} from '../../models/application.models';
 import { DashboardSummary } from '../../models/dashboard.models';
+import { DeleteConfirmationDialog } from '../../shared/delete-confirmation-dialog';
 
 interface DashboardStat {
   label: string;
@@ -30,18 +36,22 @@ interface StatusRow {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, DeleteConfirmationDialog],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Dashboard implements OnInit {
   private readonly api = inject(DashboardApiService);
+  private readonly applicationApi = inject(ApplicationApiService);
   private readonly auth = inject(AuthService);
 
   readonly loading = signal(true);
   readonly error = signal('');
   readonly summary = signal<DashboardSummary | null>(null);
+  readonly deleteTarget = signal<JobApplication | null>(null);
+  readonly deleting = signal(false);
+  readonly deleteError = signal('');
   readonly firstName = computed(() => this.auth.user()?.name.trim().split(/\s+/)[0] || 'there');
   readonly stats = computed<DashboardStat[]>(() => {
     const summary = this.summary();
@@ -117,6 +127,39 @@ export class Dashboard implements OnInit {
 
   statusClass(status: ApplicationStatus): string {
     return `status-badge status-badge--${status.toLowerCase()}`;
+  }
+
+  requestDelete(application: JobApplication): void {
+    this.deleteError.set('');
+    this.deleteTarget.set(application);
+  }
+
+  cancelDelete(): void {
+    if (!this.deleting()) {
+      this.deleteTarget.set(null);
+      this.deleteError.set('');
+    }
+  }
+
+  deleteApplication(): void {
+    const application = this.deleteTarget();
+    if (!application || this.deleting()) {
+      return;
+    }
+
+    this.deleting.set(true);
+    this.deleteError.set('');
+    this.applicationApi
+      .delete(application.id)
+      .pipe(finalize(() => this.deleting.set(false)))
+      .subscribe({
+        next: () => {
+          this.deleteTarget.set(null);
+          this.load();
+        },
+        error: (error) =>
+          this.deleteError.set(apiErrorMessage(error, 'Unable to delete this application.')),
+      });
   }
 
   private load(): void {

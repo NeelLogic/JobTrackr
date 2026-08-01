@@ -119,23 +119,43 @@
 
           <div class="recent-list">
             @for (application of dashboard.recentApplications; track application.id) {
-              <a class="recent-item" [routerLink]="['/applications', application.id]">
-                <div class="company-mark" aria-hidden="true">
-                  {{ application.company.charAt(0).toUpperCase() }}
+              <article class="recent-item interactive-row">
+                <a class="recent-item__link" [routerLink]="['/applications', application.id]">
+                  <div class="company-mark" aria-hidden="true">
+                    {{ application.company.charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="recent-item__main">
+                    <strong>{{ application.jobTitle }}</strong>
+                    <span>{{ application.company }}</span>
+                  </div>
+                  <div class="recent-item__meta">
+                    <span [class]="statusClass(application.status)">
+                      {{ enumLabel(application.status) }}
+                    </span>
+                    <time [attr.datetime]="application.updatedAt">
+                      {{ application.updatedAt | date: 'MMM d' }}
+                    </time>
+                  </div>
+                </a>
+                <div
+                  class="recent-item__actions inline-actions inline-actions--recent"
+                  aria-label="Application actions"
+                >
+                  <a [routerLink]="['/applications', application.id]">View</a>
+                  <a [routerLink]="['/applications', application.id, 'edit']">Edit</a>
+                  <button
+                    class="inline-action--danger"
+                    type="button"
+                    [disabled]="deleting()"
+                    [attr.aria-label]="
+                      'Delete ' + application.jobTitle + ' at ' + application.company
+                    "
+                    (click)="requestDelete(application)"
+                  >
+                    Delete
+                  </button>
                 </div>
-                <div class="recent-item__main">
-                  <strong>{{ application.jobTitle }}</strong>
-                  <span>{{ application.company }}</span>
-                </div>
-                <div class="recent-item__meta">
-                  <span [class]="statusClass(application.status)">
-                    {{ enumLabel(application.status) }}
-                  </span>
-                  <time [attr.datetime]="application.updatedAt">
-                    {{ application.updatedAt | date: 'MMM d' }}
-                  </time>
-                </div>
-              </a>
+              </article>
             } @empty {
               <div class="recent-empty">
                 <p>No recent applications are available.</p>
@@ -145,6 +165,16 @@
           </div>
         </section>
       </div>
+    }
+
+    @if (deleteTarget(); as application) {
+      <app-delete-confirmation-dialog
+        [application]="application"
+        [deleting]="deleting()"
+        [error]="deleteError()"
+        (cancelled)="cancelDelete()"
+        (confirmed)="deleteApplication()"
+      />
     }
   }
 </main>

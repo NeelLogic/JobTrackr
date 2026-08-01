@@ -182,6 +182,17 @@
                     "
                     >Edit</a
                   >
+                  <button
+                    class="row-delete"
+                    type="button"
+                    [disabled]="deleting()"
+                    [attr.aria-label]="
+                      'Delete ' + application.jobTitle + ' at ' + application.company
+                    "
+                    (click)="requestDelete(application)"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             }
@@ -221,4 +232,14 @@
       }
     }
   </section>
+
+  @if (deleteTarget(); as application) {
+    <app-delete-confirmation-dialog
+      [application]="application"
+      [deleting]="deleting()"
+      [error]="deleteError()"
+      (cancelled)="cancelDelete()"
+      (confirmed)="deleteApplication()"
+    />
+  }
 </main>

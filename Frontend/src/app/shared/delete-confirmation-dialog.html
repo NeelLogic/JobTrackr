@@ -1,0 +1,43 @@
+<div class="dialog-backdrop" (click)="backdropClick($event)">
+  <section
+    class="delete-dialog"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="delete-dialog-title"
+    aria-describedby="delete-dialog-description"
+  >
+    <div class="delete-dialog__icon" aria-hidden="true">!</div>
+    <div>
+      <p class="delete-dialog__eyebrow">Permanent action</p>
+      <h2 id="delete-dialog-title">Delete application?</h2>
+      <p id="delete-dialog-description">
+        <strong>{{ application().jobTitle }}</strong> at
+        <strong>{{ application().company }}</strong> and its history will be permanently removed.
+      </p>
+    </div>
+
+    @if (error()) {
+      <div class="alert alert--error" role="alert">{{ error() }}</div>
+    }
+
+    <div class="delete-dialog__actions">
+      <button
+        class="button button--secondary"
+        type="button"
+        [disabled]="deleting()"
+        autofocus
+        (click)="cancel()"
+      >
+        Keep application
+      </button>
+      <button
+        class="button delete-dialog__confirm"
+        type="button"
+        [disabled]="deleting()"
+        (click)="confirm()"
+      >
+        {{ deleting() ? 'Deleting...' : 'Yes, delete application' }}
+      </button>
+    </div>
+  </section>
+</div>

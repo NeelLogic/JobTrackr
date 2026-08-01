@@ -132,6 +132,24 @@ tbody tr:hover {
   font-weight: 700;
   text-decoration: none;
 }
+.row-delete {
+  margin-left: 14px;
+  padding: 0;
+  border: 0;
+  color: var(--danger);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.81rem;
+  font-weight: 700;
+}
+.row-delete:hover:not(:disabled) {
+  color: #912018;
+  text-decoration: underline;
+}
+.row-delete:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
 .pagination {
   display: flex;
   align-items: center;
@@ -279,6 +297,11 @@ tbody tr:hover {
     align-items: center;
     justify-content: flex-end;
     margin-left: 0;
+  }
+  .row-delete {
+    min-height: 40px;
+    margin-left: 0;
+    text-align: right;
   }
   .pagination {
     padding: 15px 16px;

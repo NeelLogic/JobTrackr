@@ -303,6 +303,48 @@ h3,
   color: #047857;
   background: #ecfdf5;
 }
+.inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+.inline-actions a,
+.inline-actions button {
+  padding: 0;
+  border: 0;
+  color: #475569;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
+}
+.inline-actions .inline-action--danger {
+  color: var(--danger);
+}
+.inline-actions a:hover,
+.inline-actions button:hover:not(:disabled) {
+  text-decoration: underline;
+}
+.inline-actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+.inline-actions--recent {
+  flex: 0 0 auto;
+  padding-right: 20px;
+}
+.interactive-row:hover,
+.interactive-row:focus-within {
+  background: #f8fbff;
+}
+@media (max-width: 680px) {
+  .inline-actions--recent {
+    justify-content: flex-end;
+    padding: 0 18px 14px 72px;
+  }
+}
 .auth-switch {
   margin: 20px 0 0;
   color: var(--ink-muted);
