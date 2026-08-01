@@ -39,6 +39,14 @@ describe('Login', () => {
     return { auth, component, fixture, router };
   }
 
+  it('shows the project copyright on the sign-in page', () => {
+    const { fixture } = setup();
+    const footer = fixture.nativeElement.querySelector('.auth-footer') as HTMLElement;
+
+    expect(footer.textContent).toContain('2026 Neel Solanki');
+    expect(footer.textContent).toContain('JobTrackr');
+  });
+
   it('marks invalid credentials fields without submitting', () => {
     const { auth, component } = setup();
 

@@ -39,6 +39,14 @@ describe('Register', () => {
     return { auth, component, fixture, router };
   }
 
+  it('shows the project copyright on the registration page', () => {
+    const { fixture } = setup();
+    const footer = fixture.nativeElement.querySelector('.auth-footer') as HTMLElement;
+
+    expect(footer.textContent).toContain('2026 Neel Solanki');
+    expect(footer.textContent).toContain('JobTrackr');
+  });
+
   it('requires a valid name, email, and strong password', () => {
     const { auth, component } = setup();
     component.form.setValue({

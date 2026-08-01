@@ -91,6 +91,14 @@ describe('Dashboard', () => {
     expect(component.loading()).toBe(false);
   });
 
+  it('renders consistently sized vector icons for attention cards', () => {
+    const { fixture } = setup();
+    const icons = fixture.nativeElement.querySelectorAll('.attention-card__icon');
+
+    expect(icons).toHaveLength(3);
+    expect(fixture.nativeElement.querySelectorAll('.attention-card__icon svg')).toHaveLength(3);
+  });
+
   it('calculates a row and percentage for every application status', () => {
     const { component } = setup();
 

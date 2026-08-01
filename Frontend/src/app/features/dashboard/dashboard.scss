@@ -59,10 +59,10 @@
 }
 .attention-card {
   display: grid;
-  grid-template-columns: 42px 1fr auto;
+  grid-template-columns: 52px 1fr auto;
   align-items: center;
-  gap: 12px;
-  padding: 16px 18px;
+  gap: 15px;
+  padding: 18px 20px;
   color: inherit;
   text-decoration: none;
 }
@@ -72,11 +72,10 @@
 }
 .attention-card__icon {
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 52px;
+  height: 52px;
   place-items: center;
-  border-radius: 11px;
-  font-weight: 850;
+  border-radius: 14px;
 }
 .attention-card__icon--red {
   color: #b42318;
@@ -91,7 +90,7 @@
   background: #fff7ed;
 }
 .attention-card strong,
-.attention-card span {
+.attention-card div span {
   display: block;
 }
 .attention-card strong {
@@ -312,7 +311,7 @@
     justify-items: start;
   }
   .attention-card {
-    grid-template-columns: 42px 1fr;
+    grid-template-columns: 52px 1fr;
   }
   .attention-card small {
     grid-column: 2;

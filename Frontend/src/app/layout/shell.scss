@@ -145,8 +145,20 @@
   font-weight: 800;
 }
 .workspace {
+  display: flex;
   min-height: 100vh;
+  flex-direction: column;
   margin-left: 260px;
+}
+.workspace-footer {
+  margin-top: auto;
+  padding: 20px 28px 24px;
+  color: #64748b;
+  font-size: 0.75rem;
+  text-align: center;
+}
+.workspace-footer small {
+  font-size: inherit;
 }
 .mobile-header,
 .sidebar__close,
