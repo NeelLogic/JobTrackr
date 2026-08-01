@@ -3,12 +3,32 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
+import { ApplicationApiService } from '../../core/api/application-api.service';
 import { DashboardApiService } from '../../core/api/dashboard-api.service';
 import { AuthService } from '../../core/auth.service';
+import { JobApplication } from '../../models/application.models';
 import { DashboardSummary } from '../../models/dashboard.models';
 import { Dashboard } from './dashboard';
 
 describe('Dashboard', () => {
+  const application: JobApplication = {
+    id: 7,
+    company: 'Acme',
+    jobTitle: 'Software Developer',
+    location: 'Toronto, ON',
+    jobUrl: null,
+    applicationDate: '2026-07-20',
+    status: 'APPLIED',
+    employmentType: 'FULL_TIME',
+    salaryMin: null,
+    salaryMax: null,
+    salaryCurrency: null,
+    notes: null,
+    followUpDate: null,
+    createdAt: '2026-07-20T12:00:00Z',
+    updatedAt: '2026-07-21T12:00:00Z',
+  };
+
   const summary: DashboardSummary = {
     totalApplications: 10,
     applicationsThisMonth: 4,
@@ -39,6 +59,10 @@ describe('Dashboard', () => {
       getSummary: vi.fn<() => ReturnType<DashboardApiService['getSummary']>>(),
     };
     api.getSummary.mockReturnValue(of(response));
+    const applicationApi = {
+      delete: vi.fn<(id: number) => ReturnType<ApplicationApiService['delete']>>(),
+    };
+    applicationApi.delete.mockReturnValue(of(undefined));
     const auth = {
       user: signal({ id: 1, name: 'Alex Morgan', email: 'alex@example.com' }),
     };
@@ -48,13 +72,14 @@ describe('Dashboard', () => {
       providers: [
         provideRouter([]),
         { provide: DashboardApiService, useValue: api },
+        { provide: ApplicationApiService, useValue: applicationApi },
         { provide: AuthService, useValue: auth },
       ],
     });
     const fixture = TestBed.createComponent(Dashboard);
     const component = fixture.componentInstance;
     fixture.detectChanges();
-    return { api, component, fixture };
+    return { api, applicationApi, component, fixture };
   }
 
   it('loads dashboard metrics and personalizes the greeting', () => {
@@ -108,6 +133,10 @@ describe('Dashboard', () => {
         provideRouter([]),
         { provide: DashboardApiService, useValue: api },
         {
+          provide: ApplicationApiService,
+          useValue: { delete: vi.fn(() => of(undefined)) },
+        },
+        {
           provide: AuthService,
           useValue: {
             user: signal({ id: 1, name: 'Alex Morgan', email: 'alex@example.com' }),
@@ -125,5 +154,34 @@ describe('Dashboard', () => {
     expect(api.getSummary).toHaveBeenCalledTimes(2);
     expect(component.error()).toBe('');
     expect(component.summary()).toEqual(summary);
+  });
+
+  it('deletes a recent application and refreshes dashboard metrics', () => {
+    const { api, applicationApi, component } = setup({
+      ...summary,
+      recentApplications: [application],
+    });
+    api.getSummary.mockClear();
+
+    component.requestDelete(application);
+    component.deleteApplication();
+
+    expect(applicationApi.delete).toHaveBeenCalledWith(7);
+    expect(component.deleteTarget()).toBeNull();
+    expect(api.getSummary).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the dashboard confirmation open when deletion fails', () => {
+    const { applicationApi, component } = setup({
+      ...summary,
+      recentApplications: [application],
+    });
+    applicationApi.delete.mockReturnValue(throwError(() => new Error('offline')));
+
+    component.requestDelete(application);
+    component.deleteApplication();
+
+    expect(component.deleteTarget()).toEqual(application);
+    expect(component.deleteError()).toBe('Unable to delete this application.');
   });
 });

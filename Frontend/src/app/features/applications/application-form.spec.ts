@@ -34,6 +34,7 @@ describe('ApplicationForm', () => {
           (id: number, request: ApplicationRequest) => ReturnType<ApplicationApiService['update']>
         >(),
       get: vi.fn<(id: number) => ReturnType<ApplicationApiService['get']>>(),
+      delete: vi.fn<(id: number) => ReturnType<ApplicationApiService['delete']>>(),
     };
     const router = {
       navigate: vi.fn(() => Promise.resolve(true)),
@@ -155,6 +156,34 @@ describe('ApplicationForm', () => {
       expect.objectContaining({ company: 'Acme', status: 'INTERVIEW' }),
     );
     expect(router.navigate).toHaveBeenCalledWith(['/applications', 7]);
+  });
+
+  it('deletes an application from the edit page after confirmation', () => {
+    const { api, component, fixture, router } = setup('7');
+    api.get.mockReturnValue(of(application));
+    api.delete.mockReturnValue(of(undefined));
+    fixture.detectChanges();
+
+    component.requestDelete();
+    expect(component.confirmingDelete()).toBe(true);
+
+    component.deleteApplication();
+
+    expect(api.delete).toHaveBeenCalledWith(7);
+    expect(router.navigate).toHaveBeenCalledWith(['/applications']);
+  });
+
+  it('reports a failed edit-page deletion without closing confirmation', () => {
+    const { api, component, fixture } = setup('7');
+    api.get.mockReturnValue(of(application));
+    api.delete.mockReturnValue(throwError(() => new Error('offline')));
+    fixture.detectChanges();
+
+    component.requestDelete();
+    component.deleteApplication();
+
+    expect(component.confirmingDelete()).toBe(true);
+    expect(component.deleteError()).toBe('Unable to delete this application.');
   });
 
   it('does not request an application for an invalid route id', () => {
