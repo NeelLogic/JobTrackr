@@ -421,8 +421,7 @@ For a future production hardening pass, token storage can move from browser loca
 | 8     | Gmail connection and permission management                         | Complete      |
 | 9     | Workday-email detection, import review, and deduplication          | Complete      |
 | 10    | Advanced company and application analytics                         | Complete      |
-| 11    | Gemini-assisted resume and cover-letter workflows                  | Deferred (V2) |
-| 12    | Docker, Render deployment, final QA, documentation, and V1 release | Complete      |
+| 11    | Docker, Render deployment, final QA, documentation, and V1 release | Complete      |
 
 ### Phase Closeout Checklist
 
