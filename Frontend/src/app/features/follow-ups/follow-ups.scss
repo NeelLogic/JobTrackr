@@ -17,7 +17,7 @@
 }
 .followup-stat:hover,
 .followup-stat.active {
-  border-color: #93c5fd;
+  border-color: var(--blue-border);
   box-shadow: 0 8px 28px rgba(37, 99, 235, 0.1);
 }
 .followup-stat.active::after {
@@ -65,8 +65,8 @@
   height: 32px;
   place-items: center;
   border-radius: 999px;
-  color: #1d4ed8;
-  background: #dbeafe;
+  color: var(--primary);
+  background: var(--blue-surface);
   font-size: 0.75rem;
   font-weight: 800;
 }
@@ -76,7 +76,7 @@
   align-items: center;
   gap: 14px;
   padding: 17px 23px;
-  border-top: 1px solid #edf1f5;
+  border-top: 1px solid var(--border-soft);
 }
 .followup-item:first-child {
   border-top: 0;
@@ -87,8 +87,8 @@
   height: 42px;
   place-items: center;
   border-radius: 11px;
-  color: #1d4ed8;
-  background: #eff6ff;
+  color: var(--primary);
+  background: var(--blue-surface);
   font-weight: 850;
 }
 .followup-item__main {

@@ -16,9 +16,9 @@
 .delete-dialog {
   width: min(100%, 480px);
   padding: 28px;
-  border: 1px solid #fecaca;
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--border));
   border-radius: 16px;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
 }
 
@@ -29,15 +29,15 @@
   margin-bottom: 20px;
   place-items: center;
   border-radius: 13px;
-  color: #b42318;
-  background: #fef3f2;
+  color: var(--danger);
+  background: var(--danger-surface);
   font-size: 1.25rem;
   font-weight: 850;
 }
 
 .delete-dialog__eyebrow {
   margin-bottom: 6px;
-  color: #b42318;
+  color: var(--danger);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.12em;

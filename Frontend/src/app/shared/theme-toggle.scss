@@ -1,0 +1,61 @@
+:host {
+  display: inline-flex;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 9px 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  color: var(--ink-secondary);
+  background: var(--surface);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--primary);
+  background: var(--surface-hover);
+}
+
+.theme-toggle--compact {
+  width: 42px;
+  padding: 0;
+}
+
+.theme-toggle[data-tone='sidebar'] {
+  width: 100%;
+  justify-content: flex-start;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.theme-toggle[data-tone='sidebar']:hover {
+  border-color: rgba(147, 197, 253, 0.35);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.theme-toggle__icon,
+.theme-toggle__icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.theme-toggle__icon svg {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+}

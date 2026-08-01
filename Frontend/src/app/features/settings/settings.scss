@@ -25,15 +25,15 @@
 .connection-status {
   padding: 6px 10px;
   border-radius: 999px;
-  color: #047857;
-  background: #d1fae5;
+  color: var(--success);
+  background: var(--success-pill);
   font-size: 0.75rem;
   font-weight: 800;
 }
 
 .connection-status--self-hosted {
-  color: #1d4ed8;
-  background: #dbeafe;
+  color: var(--primary);
+  background: var(--blue-surface);
 }
 
 .connection-row,
@@ -45,7 +45,7 @@
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 11px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .connection-row--action {
@@ -71,7 +71,7 @@
   place-items: center;
   border-radius: 50%;
   color: #1a73e8;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 2px 7px rgba(15, 23, 42, 0.12);
   font-weight: 850;
 }
@@ -94,7 +94,7 @@
   place-items: center;
   border-radius: 10px;
   color: #c5221f;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 2px 7px rgba(15, 23, 42, 0.12);
   font-weight: 850;
 }
@@ -106,7 +106,7 @@
   gap: 24px;
   margin-top: 14px;
   padding: 16px;
-  border: 1px solid #fecdca;
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--border));
   border-radius: 11px;
   background: var(--danger-surface);
 
@@ -144,8 +144,8 @@
 }
 
 .self-hosted-connection {
-  border-color: #bfdbfe;
-  background: #f8fbff;
+  border-color: var(--blue-border);
+  background: var(--surface-hover);
 }
 
 @media (max-width: 660px) {

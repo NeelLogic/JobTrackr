@@ -32,7 +32,7 @@
 }
 .stat-card p {
   margin-bottom: 12px;
-  color: #475569;
+  color: var(--ink-secondary);
   font-size: 0.76rem;
   font-weight: 750;
 }
@@ -67,7 +67,7 @@
   text-decoration: none;
 }
 .attention-card:hover {
-  border-color: #bfdbfe;
+  border-color: var(--blue-border);
   transform: translateY(-1px);
 }
 .attention-card__icon {
@@ -76,18 +76,6 @@
   height: 52px;
   place-items: center;
   border-radius: 14px;
-}
-.attention-card__icon--red {
-  color: #b42318;
-  background: #fef3f2;
-}
-.attention-card__icon--blue {
-  color: #1d4ed8;
-  background: #eff6ff;
-}
-.attention-card__icon--amber {
-  color: #9a3412;
-  background: #fff7ed;
 }
 .attention-card strong,
 .attention-card div span {
@@ -98,7 +86,7 @@
   font-size: 1.05rem;
 }
 .attention-card span {
-  color: #475569;
+  color: var(--ink-secondary);
   font-size: 0.73rem;
 }
 .attention-card small {
@@ -152,13 +140,13 @@
   font-size: 0.78rem;
 }
 .status-row__label strong {
-  color: #475569;
+  color: var(--ink-secondary);
 }
 .status-bar {
   height: 8px;
   overflow: hidden;
   border-radius: 999px;
-  background: #edf2f7;
+  background: var(--surface-subtle);
 }
 .status-fill {
   display: block;
@@ -195,7 +183,7 @@
 }
 .recent-item {
   display: flex;
-  border-bottom: 1px solid #edf1f5;
+  border-bottom: 1px solid var(--border-soft);
 }
 .recent-item__link {
   display: grid;
@@ -217,8 +205,8 @@
   height: 39px;
   place-items: center;
   border-radius: 10px;
-  color: #1d4ed8;
-  background: #eff6ff;
+  color: var(--primary);
+  background: var(--blue-surface);
   font-size: 0.84rem;
   font-weight: 850;
 }

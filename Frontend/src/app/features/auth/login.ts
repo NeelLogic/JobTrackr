@@ -5,10 +5,11 @@ import { finalize } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { apiErrorMessage } from '../../core/api-error';
 import { GoogleSignInButton } from '../../shared/google-sign-in-button';
+import { ThemeToggle } from '../../shared/theme-toggle';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, GoogleSignInButton],
+  imports: [ReactiveFormsModule, RouterLink, GoogleSignInButton, ThemeToggle],
   templateUrl: './login.html',
 })
 export class Login {

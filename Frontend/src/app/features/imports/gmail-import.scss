@@ -14,10 +14,10 @@
   gap: 16px;
   margin-bottom: 22px;
   padding: 15px 18px;
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--blue-border);
   border-radius: 11px;
-  color: #1e3a8a;
-  background: #eff6ff;
+  color: var(--primary);
+  background: var(--blue-surface);
 }
 
 .privacy-note {
@@ -33,7 +33,7 @@
 .import-summary {
   border-color: var(--border);
   color: var(--ink);
-  background: #fff;
+  background: var(--surface);
 
   > div {
     display: flex;
@@ -61,7 +61,7 @@
   place-items: center;
   border-radius: 11px;
   color: #c5221f;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 2px 9px rgba(15, 23, 42, 0.12);
   font-weight: 850;
 }
@@ -101,8 +101,8 @@
   right: 22px;
   padding: 6px 9px;
   border-radius: 999px;
-  color: #1d4ed8;
-  background: #dbeafe;
+  color: var(--primary);
+  background: var(--blue-surface);
   font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -148,7 +148,7 @@
 }
 
 .candidate-card--selected {
-  border-color: #93c5fd;
+  border-color: var(--blue-border);
   box-shadow: 0 10px 34px rgba(37, 99, 235, 0.1);
 }
 
@@ -197,33 +197,13 @@
   font-weight: 800;
 }
 
-.provider-badge {
-  color: #5b21b6;
-  background: #ede9fe;
-}
-
-.confidence-badge {
-  color: #475569;
-  background: #f1f5f9;
-}
-
-.confidence-badge--high {
-  color: #047857;
-  background: #d1fae5;
-}
-
-.confidence-badge--medium {
-  color: #9a3412;
-  background: #ffedd5;
-}
-
 details {
   margin-top: 18px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
 
   summary {
-    color: #475569;
+    color: var(--ink-secondary);
     cursor: pointer;
     font-size: 0.78rem;
     font-weight: 750;
@@ -278,8 +258,8 @@ details {
 
 .review-form {
   padding: 26px 24px;
-  border-top: 1px solid #bfdbfe;
-  background: #f8fbff;
+  border-top: 1px solid var(--blue-border);
+  background: var(--surface-hover);
 }
 
 .review-form__heading {
@@ -310,7 +290,7 @@ details {
   display: grid;
   align-content: start;
   gap: 7px;
-  color: #334155;
+  color: var(--ink-secondary);
   font-size: 0.82rem;
   font-weight: 700;
 
@@ -324,10 +304,10 @@ details {
     width: 100%;
     min-height: 44px;
     padding: 9px 11px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
     color: var(--ink);
-    background: #fff;
+    background: var(--surface);
     outline: none;
   }
 
