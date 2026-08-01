@@ -757,6 +757,29 @@ class ApiIntegrationTests {
     }
 
     @Test
+    void followUpDateRequiresFourDigitYear() throws Exception {
+        String token = register("followup-year");
+        String body = """
+                {
+                  "company":"Acme",
+                  "jobTitle":"Engineer",
+                  "status":"SAVED",
+                  "employmentType":"FULL_TIME",
+                  "followUpDate":"+123456-07-22"
+                }
+                """;
+
+        mvc.perform(post("/api/applications")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.fieldErrors.followUpDate")
+                        .value("must use a four-digit year"));
+    }
+
+    @Test
     void invalidQueryParametersReturnValidationError() throws Exception {
         String token = register("query");
         mvc.perform(get("/api/applications")

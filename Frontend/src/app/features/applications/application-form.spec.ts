@@ -108,6 +108,24 @@ describe('ApplicationForm', () => {
     expect(component.fieldError('jobUrl')).toBe('Enter a complete HTTP or HTTPS URL.');
   });
 
+  it('rejects an extended follow-up year and provides a currency dropdown', () => {
+    const { component, fixture } = setup();
+    fixture.detectChanges();
+
+    component.form.controls.followUpDate.setValue('123456-08-01');
+    component.form.controls.followUpDate.markAsTouched();
+    fixture.detectChanges();
+
+    const currency = fixture.nativeElement.querySelector(
+      '#application-salary-currency',
+    ) as HTMLSelectElement;
+    const currencyCodes = Array.from(currency.options).map((option) => option.value);
+
+    expect(component.fieldError('followUpDate')).toBe('Follow-up date must use a four-digit year.');
+    expect(currency.tagName).toBe('SELECT');
+    expect(currencyCodes).toEqual(expect.arrayContaining(['', 'CAD', 'USD', 'EUR', 'GBP']));
+  });
+
   it('normalizes optional values and creates a valid application', () => {
     const { api, component, fixture, router } = setup();
     api.create.mockReturnValue(of(application));

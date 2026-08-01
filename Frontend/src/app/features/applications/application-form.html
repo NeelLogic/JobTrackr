@@ -166,6 +166,7 @@
               id="application-date"
               type="date"
               formControlName="applicationDate"
+              [min]="minSupportedDate"
               [max]="maxApplicationDate"
               [attr.aria-invalid]="
                 fieldError('applicationDate') ||
@@ -192,7 +193,22 @@
 
           <label class="field">
             <span>Follow-up date</span>
-            <input id="application-follow-up-date" type="date" formControlName="followUpDate" />
+            <input
+              id="application-follow-up-date"
+              type="date"
+              formControlName="followUpDate"
+              [min]="minSupportedDate"
+              [max]="maxSupportedDate"
+              [attr.aria-invalid]="fieldError('followUpDate') ? 'true' : null"
+              [attr.aria-describedby]="
+                fieldError('followUpDate') ? 'application-follow-up-date-error' : null
+              "
+            />
+            @if (fieldError('followUpDate'); as error) {
+              <small id="application-follow-up-date-error" class="field-error" role="alert">{{
+                error
+              }}</small>
+            }
           </label>
         </div>
 
@@ -258,19 +274,20 @@
 
           <label class="field">
             <span>Currency</span>
-            <input
+            <select
               id="application-salary-currency"
               class="currency-input"
-              type="text"
               formControlName="salaryCurrency"
-              maxlength="3"
-              placeholder="CAD"
-              autocapitalize="characters"
               [attr.aria-invalid]="fieldError('salaryCurrency') ? 'true' : null"
               [attr.aria-describedby]="
                 fieldError('salaryCurrency') ? 'application-salary-currency-error' : null
               "
-            />
+            >
+              <option value="">Select currency</option>
+              @for (currency of salaryCurrencies; track currency.code) {
+                <option [value]="currency.code">{{ currency.label }}</option>
+              }
+            </select>
             @if (fieldError('salaryCurrency'); as error) {
               <small id="application-salary-currency-error" class="field-error" role="alert">{{
                 error

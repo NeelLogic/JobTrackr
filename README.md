@@ -20,7 +20,7 @@ JobTrackr is a full-stack job application tracker for students and new graduates
 - Protected Angular routes and authenticated API requests
 - User-specific data isolation at the repository and service layers
 - Complete job application create, read, update, and confirmed-delete workflows across the dashboard, list, detail, and edit screens
-- Company, job title, location, job URL, dates, employment type, salary, notes, and follow-up tracking
+- Company, job title, location, job URL, validated dates, employment type, salary with selectable currencies, notes, and follow-up tracking
 - Saved, Applied, Assessment, Interview, Offer, Rejected, and Withdrawn statuses
 - Search by company, job title, or location
 - Status and employment-type filters
@@ -318,8 +318,8 @@ npm run build
 
 Current Phase 12 baseline:
 
-- 58 backend tests covering password and Google authentication, Gmail configuration, token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, status history, analytics calculations, follow-up classification, authorization, validation, user data isolation, services, JWT behavior, and API integration
-- 95 frontend tests covering API services, route guards, password and Google authentication, Gmail availability and connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, confirmed application deletion, application workflows, navigation, persisted themes, and shared UI presentation
+- 59 backend tests covering password and Google authentication, Gmail configuration, token encryption, single-use OAuth callbacks, Gmail query encoding, email parsing, deduplication, reviewed imports, status history, analytics calculations, follow-up classification, authorization, validation, user data isolation, services, JWT behavior, and API integration
+- 104 frontend tests covering API services, route guards, password and Google authentication, Gmail availability and connection settings, Gmail scanning and review, advanced analytics, companies, follow-ups, dashboard, confirmed application deletion, application workflows, navigation, date validation, persisted themes, and shared UI presentation
 - 5 Node tests covering safe frontend runtime API configuration, JavaScript-string escaping, and free Render Blueprint constraints
 - Local container verification covering image builds, health checks, Flyway migrations, Nginx proxying, Angular deep links, and MySQL persistence across a full restart
 
