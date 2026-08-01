@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://jobtrackr-neellogic.onrender.com">
-    <img src=""C:\Users\Solan\OneDrive\Pictures\JobTrackr_Favicon_512.png"" width="140" alt="JobTrackr logo">
+    <img src= "Docs/JobTrackr_Favicon_512.png"" width="140" alt="JobTrackr logo">
   </a>
 </p>
 
