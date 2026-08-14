@@ -9,14 +9,14 @@
   gap: 3px;
   padding: 4px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   background: var(--surface);
 }
 .range-picker button {
   min-height: 36px;
   padding: 7px 12px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 9px;
   color: var(--ink-muted);
   background: transparent;
   cursor: pointer;
@@ -40,7 +40,25 @@
   margin-bottom: 22px;
 }
 .metric {
+  position: relative;
+  overflow: hidden;
   padding: 21px;
+}
+.metric::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--accent-blue);
+  content: '';
+}
+.metric:nth-child(2)::before {
+  background: var(--accent-orange);
+}
+.metric:nth-child(3)::before {
+  background: var(--accent-purple);
+}
+.metric:nth-child(4)::before {
+  background: var(--accent-green);
 }
 .metric > span,
 .metric small {
@@ -122,7 +140,7 @@
 .trend-track span {
   width: min(70%, 34px);
   border-radius: 6px 6px 3px 3px;
-  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  background: linear-gradient(180deg, var(--accent-blue), var(--primary));
 }
 .funnel {
   display: grid;
@@ -145,7 +163,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #2563eb, #7c3aed);
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
 }
 .funnel__row small {
   display: block;
@@ -198,7 +216,7 @@
   gap: 10px;
   padding: 13px;
   border: 1px solid var(--border-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   color: inherit;
   text-decoration: none;
 }
@@ -212,7 +230,7 @@
   height: 35px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 9px;
+  border-radius: var(--radius-icon);
   color: var(--primary);
   background: var(--blue-surface);
   font-weight: 850;

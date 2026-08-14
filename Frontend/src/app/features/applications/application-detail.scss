@@ -20,7 +20,8 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 26px;
-  margin-bottom: 30px;
+  margin-bottom: 22px;
+  padding: 24px 26px;
 }
 .detail-header__meta {
   display: flex;
@@ -162,6 +163,7 @@
   .detail-header {
     align-items: flex-start;
     flex-direction: column;
+    padding: 22px;
   }
   .detail-layout {
     grid-template-columns: 1fr;
@@ -176,6 +178,9 @@
   .timeline-card,
   .notes-card {
     padding: 21px 18px;
+  }
+  .detail-header {
+    padding: 20px 18px;
   }
   .detail-grid {
     grid-template-columns: 1fr;

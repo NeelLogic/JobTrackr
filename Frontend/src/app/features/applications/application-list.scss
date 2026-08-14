@@ -58,7 +58,7 @@
   height: 43px;
   padding: 0 11px;
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   color: var(--ink);
   background: var(--surface);
   outline: none;
@@ -66,7 +66,7 @@
 .filter-field input:focus,
 .filter-field select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.11);
+  box-shadow: var(--focus-ring);
 }
 .filter-submit {
   min-height: 43px;
@@ -172,12 +172,17 @@ tbody tr:hover {
   min-height: 35px;
   padding: 7px 11px;
   border: 1px solid var(--border-strong);
-  border-radius: 7px;
+  border-radius: 10px;
   color: var(--ink-secondary);
   background: var(--surface);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 700;
+}
+.page-button:hover:not(:disabled) {
+  border-color: var(--blue-border);
+  color: var(--primary);
+  background: var(--surface-hover);
 }
 .page-button:disabled {
   cursor: not-allowed;

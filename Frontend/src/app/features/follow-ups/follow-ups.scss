@@ -15,6 +15,23 @@
   cursor: pointer;
   text-align: left;
 }
+.followup-stat::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  background: var(--accent-blue);
+  content: '';
+}
+.followup-stat:nth-child(2)::before {
+  background: var(--accent-orange);
+}
+.followup-stat:nth-child(3)::before {
+  background: var(--accent-purple);
+}
+.followup-stat:nth-child(4)::before {
+  background: var(--accent-green);
+}
 .followup-stat:hover,
 .followup-stat.active {
   border-color: var(--blue-border);
@@ -86,7 +103,7 @@
   width: 42px;
   height: 42px;
   place-items: center;
-  border-radius: 11px;
+  border-radius: var(--radius-icon);
   color: var(--primary);
   background: var(--blue-surface);
   font-weight: 850;

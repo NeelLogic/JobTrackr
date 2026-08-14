@@ -87,7 +87,7 @@ describe('Dashboard', () => {
 
     expect(api.getSummary).toHaveBeenCalledOnce();
     expect(component.firstName()).toBe('Alex');
-    expect(component.stats().map((stat) => stat.value)).toEqual(['10', '6', '4', '50%', '1']);
+    expect(component.stats().map((stat) => stat.value)).toEqual(['10', '6', '4', '2', '50%', '1']);
     expect(component.loading()).toBe(false);
   });
 
