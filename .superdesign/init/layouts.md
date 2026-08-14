@@ -29,10 +29,10 @@
 
 ## Guest authentication layout
 
-Login and Register are self-contained split auth pages, not wrapped by `Shell`.
+Login, Register, Verify Email, and Forgot Password are self-contained split auth pages, not wrapped by `Shell`.
 
 - Left: deep navy-blue brand panel with JobTrackr positioning copy.
-- Right: neutral canvas with a bordered, elevated form card, theme toggle, Google sign-in state, credential fields, and reciprocal auth link.
+- Right: neutral canvas with a bordered, elevated form card, theme toggle, credential or OTP fields, clear validation states, and reciprocal auth links. Login and Register also include Google sign-in.
 - Below `760px`, the layout stacks into one column; the form card remains full-width without horizontal overflow.
 
-Source files: `Frontend/src/app/features/auth/login.html`, `register.html`, and global auth rules in `Frontend/src/styles.scss`.
+Source files: `Frontend/src/app/features/auth/*.html` and global auth rules in `Frontend/src/styles.scss`.

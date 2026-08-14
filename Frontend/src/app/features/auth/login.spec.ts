@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router, provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
@@ -97,6 +98,28 @@ describe('Login', () => {
 
     expect(component.error()).toBe('Invalid email or password.');
     expect(component.loading()).toBe(false);
+  });
+
+  it('offers email verification after valid credentials reach an unverified account', () => {
+    const { auth, component } = setup();
+    auth.login.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 403,
+            error: {
+              status: 403,
+              message: 'Verify your email before signing in',
+            },
+          }),
+      ),
+    );
+    component.form.setValue({ email: 'alex@example.com', password: 'Password1' });
+
+    component.submit();
+
+    expect(component.verificationRequired()).toBe(true);
+    expect(component.error()).toBe('Verify your email before signing in');
   });
 
   it('signs in with a Google credential and redirects to the dashboard', () => {

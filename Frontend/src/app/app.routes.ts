@@ -15,6 +15,20 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register').then((module) => module.Register),
   },
   {
+    path: 'verify-email',
+    title: 'Verify email | JobTrackr',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/verify-email').then((module) => module.VerifyEmail),
+  },
+  {
+    path: 'forgot-password',
+    title: 'Reset password | JobTrackr',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/forgot-password').then((module) => module.ForgotPassword),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./layout/shell').then((module) => module.Shell),

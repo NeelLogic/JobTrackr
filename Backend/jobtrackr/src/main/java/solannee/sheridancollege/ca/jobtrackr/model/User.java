@@ -35,6 +35,9 @@ public class User {
     @Column(name = "password_hash", length = 60)
     private String passwordHash;
 
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

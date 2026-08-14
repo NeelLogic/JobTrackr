@@ -5,7 +5,11 @@ import { environment } from '../../environments/environment';
 import {
   AuthResponse,
   ConnectedIdentity,
+  EmailRequest,
   LoginRequest,
+  MessageResponse,
+  OtpVerificationRequest,
+  PasswordResetRequest,
   RegisterRequest,
   User,
 } from '../models/auth.models';
@@ -27,9 +31,34 @@ export class AuthService {
   }
 
   register(request: RegisterRequest) {
+    return this.http.post<MessageResponse>(`${environment.apiUrl}/auth/register`, request);
+  }
+
+  verifyEmail(request: OtpVerificationRequest) {
     return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/auth/register`, request)
+      .post<AuthResponse>(`${environment.apiUrl}/auth/email-verification/confirm`, request)
       .pipe(tap((response) => this.persist(response)));
+  }
+
+  resendEmailVerification(request: EmailRequest) {
+    return this.http.post<MessageResponse>(
+      `${environment.apiUrl}/auth/email-verification/resend`,
+      request,
+    );
+  }
+
+  requestPasswordReset(request: EmailRequest) {
+    return this.http.post<MessageResponse>(
+      `${environment.apiUrl}/auth/password-reset/request`,
+      request,
+    );
+  }
+
+  resetPassword(request: PasswordResetRequest) {
+    return this.http.post<MessageResponse>(
+      `${environment.apiUrl}/auth/password-reset/confirm`,
+      request,
+    );
   }
 
   loginWithGoogle(credential: string) {

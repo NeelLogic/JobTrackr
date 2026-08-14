@@ -98,14 +98,16 @@ All authenticated pages also render within `layout/shell.ts` → `shell.html` + 
     - `google-sign-in-button.html`
     - `google-sign-in-button.scss`
 
-## `/login` and `/register`
-- `Frontend/src/app/features/auth/login.ts` or `register.ts`
-  - corresponding `.html` and `.scss`
+## `/login`, `/register`, `/verify-email`, and `/forgot-password`
+- `Frontend/src/app/features/auth/login.ts`, `register.ts`, `verify-email.ts`, or `forgot-password.ts`
+  - corresponding `.html` templates; shared auth styling lives in `Frontend/src/styles.scss`
   - `core/auth.service.ts`
   - `core/google-identity.service.ts`
   - `core/api-error.ts`
   - `models/auth.models.ts`
-  - `shared/google-sign-in-button.*`
+  - `shared/google-sign-in-button.*` on login and registration
   - `shared/theme-toggle.*`
+
+Password registration continues to `/verify-email` and creates a session only after a valid six-digit code. `/forgot-password` contains both the generic reset request and OTP confirmation steps. Google authentication remains verified by the provider and bypasses email OTP.
 
 Every page additionally depends on global visual primitives and tokens in `Frontend/src/styles.scss`.

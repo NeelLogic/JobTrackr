@@ -115,7 +115,7 @@
         [disabled]="loading()"
         [attr.aria-describedby]="error() ? 'register-error' : null"
       >
-        {{ loading() ? 'Creating account...' : 'Create account' }}
+        {{ loading() ? 'Sending verification code...' : 'Create account' }}
       </button>
       <p class="auth-switch">Already have an account? <a routerLink="/login">Sign in</a></p>
     </form>

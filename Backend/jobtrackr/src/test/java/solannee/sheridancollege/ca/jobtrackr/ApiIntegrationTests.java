@@ -2,7 +2,9 @@ package solannee.sheridancollege.ca.jobtrackr;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,14 +22,18 @@ import solannee.sheridancollege.ca.jobtrackr.repository.GmailConnectionRepositor
 import solannee.sheridancollege.ca.jobtrackr.repository.GmailImportCandidateRepository;
 import solannee.sheridancollege.ca.jobtrackr.security.GoogleIdentityVerifier;
 import solannee.sheridancollege.ca.jobtrackr.security.VerifiedGoogleIdentity;
+import solannee.sheridancollege.ca.jobtrackr.service.AuthEmailSender;
 import solannee.sheridancollege.ca.jobtrackr.service.GmailIntegrationService;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -59,6 +65,9 @@ class ApiIntegrationTests {
     @MockitoBean
     GmailMailboxClient gmailMailboxClient;
 
+    @MockitoBean
+    AuthEmailSender authEmailSender;
+
     @Autowired
     GmailConnectionRepository gmailConnections;
 
@@ -66,6 +75,11 @@ class ApiIntegrationTests {
     GmailImportCandidateRepository gmailImportCandidates;
 
     private static int sequence;
+
+    @BeforeEach
+    void configureAuthEmail() {
+        when(authEmailSender.isAvailable()).thenReturn(true);
+    }
 
     private String register(String prefix) throws Exception {
         String email = prefix + (++sequence) + "@example.com";
@@ -76,10 +90,25 @@ class ApiIntegrationTests {
         String body = """
                 {"name":"Test User","email":"%s","password":"Password1"}
                 """.formatted(email);
-        String response = mvc.perform(post("/api/auth/register")
+        clearInvocations(authEmailSender);
+        mvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value(
+                        "Check your email for the six-digit verification code"));
+        ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
+        verify(authEmailSender).sendEmailVerification(
+                eq(email.trim().toLowerCase(Locale.ROOT)),
+                code.capture(),
+                any()
+        );
+        String response = mvc.perform(post("/api/auth/email-verification/confirm")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","code":"%s"}
+                                """.formatted(email, code.getValue())))
+                .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return json.readTree(response).get("token").asText();
     }
@@ -202,6 +231,132 @@ class ApiIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"nobody@example.com\",\"password\":\"Wrong123\"}"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void passwordAccountMustVerifyEmailBeforeSigningIn() throws Exception {
+        String email = "verify" + (++sequence) + "@example.com";
+        clearInvocations(authEmailSender);
+        mvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Verify User","email":"%s","password":"Password1"}
+                                """.formatted(email)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.token").doesNotExist());
+
+        mvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","password":"Password1"}
+                                """.formatted(email)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Verify your email before signing in"));
+
+        mvc.perform(post("/api/auth/email-verification/confirm")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","code":"999999"}
+                                """.formatted(email)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("The code is invalid or has expired"));
+
+        ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
+        verify(authEmailSender).sendEmailVerification(eq(email), code.capture(), any());
+        mvc.perform(post("/api/auth/email-verification/confirm")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","code":"%s"}
+                                """.formatted(email, code.getValue())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty());
+
+        mvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","password":"Password1"}
+                                """.formatted(email)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void verificationCodeLocksAfterFiveFailedAttempts() throws Exception {
+        String email = "verify-limit" + (++sequence) + "@example.com";
+        clearInvocations(authEmailSender);
+        mvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Verify User","email":"%s","password":"Password1"}
+                                """.formatted(email)))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
+        verify(authEmailSender).sendEmailVerification(eq(email), code.capture(), any());
+        for (int attempt = 0; attempt < 5; attempt++) {
+            mvc.perform(post("/api/auth/email-verification/confirm")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"email":"%s","code":"999999"}
+                                    """.formatted(email)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        mvc.perform(post("/api/auth/email-verification/confirm")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","code":"%s"}
+                                """.formatted(email, code.getValue())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("The code is invalid or has expired"));
+    }
+
+    @Test
+    void forgotPasswordUsesAGenericRequestAndSingleUseOtp() throws Exception {
+        String email = "reset" + (++sequence) + "@example.com";
+        registerEmail(email);
+        clearInvocations(authEmailSender);
+
+        mvc.perform(post("/api/auth/password-reset/request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"missing@example.com\"}"))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.message").value(
+                        "If an eligible account exists, a password reset code has been sent"));
+        verify(authEmailSender, times(0)).sendPasswordReset(anyString(), anyString(), any());
+
+        mvc.perform(post("/api/auth/password-reset/request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email + "\"}"))
+                .andExpect(status().isAccepted());
+        ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
+        verify(authEmailSender).sendPasswordReset(eq(email), code.capture(), any());
+
+        mvc.perform(post("/api/auth/password-reset/confirm")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","code":"%s","password":"NewPassword2"}
+                                """.formatted(email, code.getValue())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Your password has been reset"));
+
+        mvc.perform(post("/api/auth/password-reset/confirm")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","code":"%s","password":"AnotherPassword3"}
+                                """.formatted(email, code.getValue())))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","password":"Password1"}
+                                """.formatted(email)))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","password":"NewPassword2"}
+                                """.formatted(email)))
+                .andExpect(status().isOk());
     }
 
     @Test
