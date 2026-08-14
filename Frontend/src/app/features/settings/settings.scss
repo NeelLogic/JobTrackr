@@ -44,7 +44,7 @@
   gap: 14px;
   padding: 16px;
   border: 1px solid var(--border);
-  border-radius: 11px;
+  border-radius: var(--radius-control);
   background: var(--surface-subtle);
 }
 
@@ -92,7 +92,7 @@
   height: 42px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 10px;
+  border-radius: var(--radius-icon);
   color: #c5221f;
   background: var(--surface);
   box-shadow: 0 2px 7px rgba(15, 23, 42, 0.12);
@@ -107,7 +107,7 @@
   margin-top: 14px;
   padding: 16px;
   border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--border));
-  border-radius: 11px;
+  border-radius: var(--radius-control);
   background: var(--danger-surface);
 
   > div:first-child {

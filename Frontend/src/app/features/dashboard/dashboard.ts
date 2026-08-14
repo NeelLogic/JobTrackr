@@ -25,7 +25,8 @@ interface DashboardStat {
   label: string;
   value: string;
   description: string;
-  tone: 'blue' | 'violet' | 'amber' | 'green' | 'red';
+  tone: 'blue' | 'pink' | 'purple' | 'orange' | 'green' | 'red';
+  icon: 'briefcase' | 'activity' | 'document' | 'interview' | 'response' | 'offer';
 }
 
 interface StatusRow {
@@ -64,30 +65,42 @@ export class Dashboard implements OnInit {
         value: String(summary.totalApplications),
         description: 'Across your pipeline',
         tone: 'blue',
+        icon: 'briefcase',
       },
       {
         label: 'Active applications',
         value: String(summary.activeApplications),
         description: 'Still moving forward',
-        tone: 'violet',
+        tone: 'pink',
+        icon: 'activity',
       },
       {
         label: 'This month',
         value: String(summary.applicationsThisMonth),
         description: 'Applications submitted',
-        tone: 'amber',
+        tone: 'purple',
+        icon: 'document',
+      },
+      {
+        label: 'Interviews',
+        value: String(summary.interviews),
+        description: 'Reached interview stage',
+        tone: 'orange',
+        icon: 'interview',
       },
       {
         label: 'Response rate',
         value: `${summary.responseRate}%`,
         description: 'Applications with a response',
         tone: 'green',
+        icon: 'response',
       },
       {
         label: 'Offers reached',
         value: String(summary.offers),
         description: `${summary.offerRate}% of applied roles`,
         tone: 'green',
+        icon: 'offer',
       },
     ];
   });

@@ -10,7 +10,7 @@
   gap: 10px;
   padding: 9px 13px;
   border: 1px solid var(--border-strong);
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   color: var(--ink-secondary);
   background: var(--surface);
   cursor: pointer;
@@ -36,15 +36,15 @@
 .theme-toggle[data-tone='sidebar'] {
   width: 100%;
   justify-content: flex-start;
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border);
+  color: var(--ink-muted);
+  background: var(--surface-subtle);
 }
 
 .theme-toggle[data-tone='sidebar']:hover {
-  border-color: rgba(147, 197, 253, 0.35);
-  color: #fff;
-  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--blue-border);
+  color: var(--primary);
+  background: var(--blue-surface);
 }
 
 .theme-toggle__icon,
