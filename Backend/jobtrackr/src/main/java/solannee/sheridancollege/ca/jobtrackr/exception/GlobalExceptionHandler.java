@@ -66,6 +66,14 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.UNAUTHORIZED, "Invalid email or password", request, null);
     }
 
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    ResponseEntity<ApiError> emailNotVerified(
+            EmailNotVerifiedException exception,
+            HttpServletRequest request
+    ) {
+        return error(HttpStatus.FORBIDDEN, exception.getMessage(), request, null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ApiError> bodyValidation(MethodArgumentNotValidException exception, HttpServletRequest request) {
         Map<String, String> fields = new LinkedHashMap<>();

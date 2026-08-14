@@ -6,6 +6,8 @@ Router source: `Frontend/src/app/app.routes.ts`. Angular 21 standalone lazy-load
 |---|---|---|---|
 | `/login` | `features/auth/login.ts` | Standalone auth layout | Guest |
 | `/register` | `features/auth/register.ts` | Standalone auth layout | Guest |
+| `/verify-email` | `features/auth/verify-email.ts` | Standalone auth layout | Guest |
+| `/forgot-password` | `features/auth/forgot-password.ts` | Standalone auth layout | Guest |
 | `/dashboard` | `features/dashboard/dashboard.ts` | `layout/shell.ts` | Authenticated |
 | `/applications` | `features/applications/application-list.ts` | Shell | Authenticated |
 | `/applications/new` | `features/applications/application-form.ts` | Shell | Authenticated |
@@ -23,6 +25,8 @@ Default authenticated redirect is `/dashboard`; wildcard redirects to the app ro
 export const routes: Routes = [
   { path:'login', title:'Sign in | JobTrackr', canActivate:[guestGuard], loadComponent:()=>import('./features/auth/login').then(m=>m.Login) },
   { path:'register', title:'Create account | JobTrackr', canActivate:[guestGuard], loadComponent:()=>import('./features/auth/register').then(m=>m.Register) },
+  { path:'verify-email', title:'Verify email | JobTrackr', canActivate:[guestGuard], loadComponent:()=>import('./features/auth/verify-email').then(m=>m.VerifyEmail) },
+  { path:'forgot-password', title:'Reset password | JobTrackr', canActivate:[guestGuard], loadComponent:()=>import('./features/auth/forgot-password').then(m=>m.ForgotPassword) },
   { path:'', canActivate:[authGuard], loadComponent:()=>import('./layout/shell').then(m=>m.Shell), children:[
     { path:'dashboard', loadComponent:()=>import('./features/dashboard/dashboard').then(m=>m.Dashboard) },
     { path:'applications', loadComponent:()=>import('./features/applications/application-list').then(m=>m.ApplicationList) },

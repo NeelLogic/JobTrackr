@@ -30,8 +30,22 @@
         <p>Continue managing your applications.</p>
       </div>
 
+      @if (notice()) {
+        <div class="alert alert--success" role="status">{{ notice() }}</div>
+      }
+
       @if (error()) {
-        <div id="login-error" class="alert alert--error" role="alert">{{ error() }}</div>
+        <div id="login-error" class="alert alert--error" role="alert">
+          {{ error() }}
+          @if (verificationRequired()) {
+            <a
+              class="alert__link"
+              routerLink="/verify-email"
+              [queryParams]="{ email: form.controls.email.value }"
+              >Enter verification code</a
+            >
+          }
+        </div>
       }
 
       <app-google-sign-in-button
@@ -64,7 +78,10 @@
       </label>
 
       <label for="login-password">
-        Password
+        <span class="auth-label-row">
+          <span>Password</span>
+          <a routerLink="/forgot-password">Forgot password?</a>
+        </span>
         <input
           id="login-password"
           type="password"

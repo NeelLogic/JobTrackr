@@ -64,9 +64,9 @@ describe('Register', () => {
     expect(auth.register).not.toHaveBeenCalled();
   });
 
-  it('registers a valid account and redirects to the dashboard', () => {
+  it('registers a valid account and redirects to email verification', () => {
     const { auth, component, router } = setup();
-    auth.register.mockReturnValue(of(response));
+    auth.register.mockReturnValue(of({ message: 'Check your email' }));
     component.form.setValue({
       name: 'Alex Morgan',
       email: 'alex@example.com',
@@ -80,7 +80,9 @@ describe('Register', () => {
       email: 'alex@example.com',
       password: 'Password1',
     });
-    expect(router.navigate).toHaveBeenCalledWith(['/dashboard']);
+    expect(router.navigate).toHaveBeenCalledWith(['/verify-email'], {
+      queryParams: { email: 'alex@example.com' },
+    });
     expect(component.loading()).toBe(false);
   });
 

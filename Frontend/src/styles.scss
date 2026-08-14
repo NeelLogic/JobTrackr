@@ -357,6 +357,24 @@ h3,
   font-size: 0.9rem;
   font-weight: 700;
 }
+.auth-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.auth-label-row a,
+.alert__link {
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.alert__link {
+  display: inline-block;
+  margin-left: 6px;
+  text-decoration: underline;
+}
 .auth-card input {
   width: 100%;
   min-height: 48px;
@@ -380,6 +398,43 @@ h3,
 .auth-card input[aria-invalid='true'] {
   border-color: #f97066;
   box-shadow: 0 0 0 3px rgba(240, 68, 56, 0.08);
+}
+.auth-code-input {
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.28em;
+  text-align: center;
+}
+.auth-text-button {
+  width: 100%;
+  margin-top: 14px;
+  padding: 8px;
+  border: 0;
+  color: var(--primary);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.auth-secondary-actions {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 16px;
+}
+.auth-secondary-actions button {
+  padding: 4px;
+  border: 0;
+  color: var(--primary);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.auth-text-button:disabled,
+.auth-secondary-actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 .field-error {
   color: var(--danger);

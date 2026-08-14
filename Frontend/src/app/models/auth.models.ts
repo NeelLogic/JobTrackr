@@ -20,6 +20,22 @@ export interface RegisterRequest extends LoginRequest {
   name: string;
 }
 
+export interface MessageResponse {
+  message: string;
+}
+
+export interface EmailRequest {
+  email: string;
+}
+
+export interface OtpVerificationRequest extends EmailRequest {
+  code: string;
+}
+
+export interface PasswordResetRequest extends OtpVerificationRequest {
+  password: string;
+}
+
 export interface GoogleAuthConfig {
   enabled: boolean;
   clientId?: string;

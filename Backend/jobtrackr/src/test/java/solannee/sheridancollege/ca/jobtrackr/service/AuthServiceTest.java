@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.LoginRequest;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.RegisterRequest;
 import solannee.sheridancollege.ca.jobtrackr.exception.ConflictException;
+import solannee.sheridancollege.ca.jobtrackr.exception.EmailNotVerifiedException;
 import solannee.sheridancollege.ca.jobtrackr.exception.InvalidRequestException;
 import solannee.sheridancollege.ca.jobtrackr.model.AuthProvider;
 import solannee.sheridancollege.ca.jobtrackr.model.User;
@@ -36,6 +37,7 @@ class AuthServiceTest {
     @Mock AuthenticationManager authenticationManager;
     @Mock JwtService jwtService;
     @Mock GoogleIdentityVerifier googleIdentityVerifier;
+    @Mock AuthCodeService authCodeService;
     private AuthService service;
 
     @BeforeEach
@@ -46,7 +48,8 @@ class AuthServiceTest {
                 passwordEncoder,
                 authenticationManager,
                 jwtService,
-                googleIdentityVerifier
+                googleIdentityVerifier,
+                authCodeService
         );
     }
 
@@ -58,9 +61,6 @@ class AuthServiceTest {
             user.setId(42L);
             return user;
         });
-        when(jwtService.generateToken("user@example.com")).thenReturn("token");
-        when(jwtService.getExpirationSeconds()).thenReturn(3600L);
-
         var response = service.register(new RegisterRequest("  Test User  ", " User@Example.com ", "Password1"));
 
         ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
@@ -68,8 +68,9 @@ class AuthServiceTest {
         assertThat(saved.getValue().getEmail()).isEqualTo("user@example.com");
         assertThat(saved.getValue().getName()).isEqualTo("Test User");
         assertThat(saved.getValue().getPasswordHash()).isEqualTo("hashed");
-        assertThat(response.user().id()).isEqualTo(42L);
-        assertThat(response.token()).isEqualTo("token");
+        assertThat(saved.getValue().isEmailVerified()).isFalse();
+        assertThat(response.message()).contains("verification code");
+        verify(authCodeService).sendEmailVerification(saved.getValue());
     }
 
     @Test
@@ -80,7 +81,7 @@ class AuthServiceTest {
                 new RegisterRequest("User", "user@example.com", "Password1")))
                 .isInstanceOf(ConflictException.class);
 
-        verifyNoInteractions(passwordEncoder, authenticationManager, jwtService);
+        verifyNoInteractions(passwordEncoder, authenticationManager, jwtService, authCodeService);
         verify(userRepository, never()).save(any());
     }
 
@@ -90,6 +91,7 @@ class AuthServiceTest {
         user.setId(9L);
         user.setName("User");
         user.setEmail("user@example.com");
+        user.setEmailVerified(true);
         when(userRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(user));
         when(jwtService.generateToken("user@example.com")).thenReturn("token");
 
@@ -98,6 +100,20 @@ class AuthServiceTest {
         verify(authenticationManager).authenticate(argThat(authentication ->
                 authentication.getName().equals("user@example.com")));
         verify(userRepository).findByEmailIgnoreCase("user@example.com");
+    }
+
+    @Test
+    void loginRequiresAConfirmedPasswordAccountEmail() {
+        User user = user(9L, "user@example.com");
+        user.setEmailVerified(false);
+        when(userRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> service.login(
+                new LoginRequest("user@example.com", "Password1")))
+                .isInstanceOf(EmailNotVerifiedException.class);
+
+        verify(authenticationManager).authenticate(any());
+        verifyNoInteractions(jwtService);
     }
 
     @Test
@@ -124,6 +140,7 @@ class AuthServiceTest {
         verify(userRepository).save(user.capture());
         assertThat(user.getValue().getPasswordHash()).isNull();
         assertThat(user.getValue().getEmail()).isEqualTo("user@example.com");
+        assertThat(user.getValue().isEmailVerified()).isTrue();
         verify(identityRepository).save(argThat(identity ->
                 identity.getProvider() == AuthProvider.GOOGLE
                         && identity.getProviderSubject().equals("google-123")
@@ -183,6 +200,7 @@ class AuthServiceTest {
         user.setId(id);
         user.setName("User");
         user.setEmail(email);
+        user.setEmailVerified(true);
         return user;
     }
 }

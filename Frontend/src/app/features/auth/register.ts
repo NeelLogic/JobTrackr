@@ -51,7 +51,10 @@ export class Register {
       .register(this.form.getRawValue())
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: () => void this.router.navigate(['/dashboard']),
+        next: () =>
+          void this.router.navigate(['/verify-email'], {
+            queryParams: { email: this.form.controls.email.value },
+          }),
         error: (error) => this.error.set(apiErrorMessage(error, 'Unable to create your account.')),
       });
   }

@@ -8,10 +8,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.AuthResponse;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.ConnectedIdentityResponse;
+import solannee.sheridancollege.ca.jobtrackr.dto.auth.EmailRequest;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.LoginRequest;
+import solannee.sheridancollege.ca.jobtrackr.dto.auth.MessageResponse;
+import solannee.sheridancollege.ca.jobtrackr.dto.auth.OtpVerificationRequest;
+import solannee.sheridancollege.ca.jobtrackr.dto.auth.PasswordResetRequest;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.RegisterRequest;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.UserResponse;
 import solannee.sheridancollege.ca.jobtrackr.exception.ConflictException;
+import solannee.sheridancollege.ca.jobtrackr.exception.EmailNotVerifiedException;
 import solannee.sheridancollege.ca.jobtrackr.exception.InvalidRequestException;
 import solannee.sheridancollege.ca.jobtrackr.model.AuthProvider;
 import solannee.sheridancollege.ca.jobtrackr.model.User;
@@ -35,9 +40,10 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwt;
     private final GoogleIdentityVerifier googleIdentityVerifier;
+    private final AuthCodeService authCodes;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public MessageResponse register(RegisterRequest request) {
         String email = normalizeEmail(request.email());
         if (users.existsByEmailIgnoreCase(email)) {
             throw new ConflictException("An account with this email already exists");
@@ -47,7 +53,10 @@ public class AuthService {
         user.setName(request.name().trim());
         user.setEmail(email);
         user.setPasswordHash(encoder.encode(request.password()));
-        return response(users.save(user));
+        user.setEmailVerified(false);
+        user = users.save(user);
+        authCodes.sendEmailVerification(user);
+        return new MessageResponse("Check your email for the six-digit verification code");
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -55,7 +64,32 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, request.password()));
         User user = users.findByEmailIgnoreCase(email).orElseThrow();
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException();
+        }
         return response(user);
+    }
+
+    public AuthResponse verifyEmail(OtpVerificationRequest request) {
+        return response(authCodes.verifyEmail(request.email(), request.code()));
+    }
+
+    public MessageResponse resendEmailVerification(EmailRequest request) {
+        authCodes.resendEmailVerification(request.email());
+        return new MessageResponse(
+                "If the account still needs verification, a new code has been sent");
+    }
+
+    public MessageResponse requestPasswordReset(EmailRequest request) {
+        authCodes.requestPasswordReset(request.email());
+        return new MessageResponse(
+                "If an eligible account exists, a password reset code has been sent");
+    }
+
+    public MessageResponse resetPassword(PasswordResetRequest request) {
+        String passwordHash = encoder.encode(request.password());
+        authCodes.resetPassword(request.email(), request.code(), passwordHash);
+        return new MessageResponse("Your password has been reset");
     }
 
     @Transactional
@@ -111,6 +145,7 @@ public class AuthService {
         User user = new User();
         user.setName(google.name());
         user.setEmail(google.email());
+        user.setEmailVerified(true);
         user = users.save(user);
 
         UserIdentity identity = new UserIdentity();

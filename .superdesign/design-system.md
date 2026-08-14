@@ -41,5 +41,6 @@ Never use color as the only status signal; pair it with a text label and accessi
 
 - Use real backend values and routes. Do not reproduce sample recruiter metrics, AI scores, subscriptions, candidate management, or account-balance content from reference mockups.
 - Preserve loading, error, empty, destructive confirmation, dark-theme, keyboard, and responsive states.
+- Password accounts must confirm email ownership with a six-digit code before receiving a session. Password recovery uses a distinct expiring OTP and generic account-existence messaging.
 - Use the existing JobTrackr mark from `Frontend/public/jobtrackr-mark.svg` and inline product icons; do not rely on third-party logo services.
 - Keep one high-emphasis action per region. Secondary actions should use bordered or text treatments.

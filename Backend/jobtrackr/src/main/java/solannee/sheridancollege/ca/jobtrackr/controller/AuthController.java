@@ -13,9 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 import solannee.sheridancollege.ca.jobtrackr.config.GoogleAuthProperties;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.AuthResponse;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.ConnectedIdentityResponse;
+import solannee.sheridancollege.ca.jobtrackr.dto.auth.EmailRequest;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.GoogleAuthConfigResponse;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.GoogleCredentialRequest;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.LoginRequest;
+import solannee.sheridancollege.ca.jobtrackr.dto.auth.MessageResponse;
+import solannee.sheridancollege.ca.jobtrackr.dto.auth.OtpVerificationRequest;
+import solannee.sheridancollege.ca.jobtrackr.dto.auth.PasswordResetRequest;
 import solannee.sheridancollege.ca.jobtrackr.dto.auth.RegisterRequest;
 import solannee.sheridancollege.ca.jobtrackr.service.AuthService;
 import solannee.sheridancollege.ca.jobtrackr.service.CurrentUserService;
@@ -32,13 +36,35 @@ public class AuthController {
     private final GoogleAuthProperties googleProperties;
 
     @PostMapping("/register")
-    ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+    ResponseEntity<MessageResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.register(request));
     }
 
     @PostMapping("/login")
     AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return service.login(request);
+    }
+
+    @PostMapping("/email-verification/confirm")
+    AuthResponse verifyEmail(@Valid @RequestBody OtpVerificationRequest request) {
+        return service.verifyEmail(request);
+    }
+
+    @PostMapping("/email-verification/resend")
+    ResponseEntity<MessageResponse> resendEmailVerification(
+            @Valid @RequestBody EmailRequest request
+    ) {
+        return ResponseEntity.accepted().body(service.resendEmailVerification(request));
+    }
+
+    @PostMapping("/password-reset/request")
+    ResponseEntity<MessageResponse> requestPasswordReset(@Valid @RequestBody EmailRequest request) {
+        return ResponseEntity.accepted().body(service.requestPasswordReset(request));
+    }
+
+    @PostMapping("/password-reset/confirm")
+    MessageResponse resetPassword(@Valid @RequestBody PasswordResetRequest request) {
+        return service.resetPassword(request);
     }
 
     @GetMapping("/google/config")

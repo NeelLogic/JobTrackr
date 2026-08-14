@@ -64,4 +64,45 @@ describe('AuthService Google integration', () => {
     expect(identitiesRequest.request.method).toBe('GET');
     identitiesRequest.flush([identity]);
   });
+
+  it('registers without creating a session until the email code is confirmed', () => {
+    const registration = {
+      name: 'Alex Morgan',
+      email: 'alex@example.com',
+      password: 'Password1',
+    };
+
+    service.register(registration).subscribe((result) => {
+      expect(result.message).toContain('verification');
+    });
+    const registerRequest = http.expectOne('/api/auth/register');
+    expect(registerRequest.request.method).toBe('POST');
+    registerRequest.flush({ message: 'Check your email for the verification code' });
+    expect(service.token()).toBeNull();
+
+    service.verifyEmail({ email: registration.email, code: '123456' }).subscribe();
+    const verifyRequest = http.expectOne('/api/auth/email-verification/confirm');
+    expect(verifyRequest.request.body).toEqual({ email: registration.email, code: '123456' });
+    verifyRequest.flush(response);
+    expect(service.token()).toBe('jobtrackr-token');
+  });
+
+  it('uses public OTP password recovery endpoints without persisting a session', () => {
+    service.requestPasswordReset({ email: 'alex@example.com' }).subscribe();
+    const request = http.expectOne('/api/auth/password-reset/request');
+    expect(request.request.body).toEqual({ email: 'alex@example.com' });
+    request.flush({ message: 'Code sent' });
+
+    service
+      .resetPassword({ email: 'alex@example.com', code: '123456', password: 'NewPassword2' })
+      .subscribe();
+    const confirm = http.expectOne('/api/auth/password-reset/confirm');
+    expect(confirm.request.body).toEqual({
+      email: 'alex@example.com',
+      code: '123456',
+      password: 'NewPassword2',
+    });
+    confirm.flush({ message: 'Password reset' });
+    expect(service.token()).toBeNull();
+  });
 });
